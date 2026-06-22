@@ -215,7 +215,126 @@ function avatarHTML(userId, size = 20) {
   return `<span class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.floor(size*0.38)}px;">${u.initials}</span>`;
 }
 
-// Placeholders for screen functions — filled in Tasks 3-7
+// ── NAV BAR ──────────────────────────────────────────────────
+function renderNavBar() {
+  const unread = NOTIFICATIONS.filter(n => !n.read).length;
+  return `
+  <nav style="position:sticky;top:0;z-index:10;background:var(--bg);
+              display:flex;align-items:center;justify-content:space-between;
+              padding:10px 20px;border-bottom:1px solid var(--border);">
+    <span class="wordmark" style="cursor:pointer;" onclick="navigateTo('feed')">DZTAQUE</span>
+    <div style="flex:1;max-width:340px;margin:0 24px;display:flex;align-items:center;
+                gap:8px;background:rgba(237,232,213,.07);border:1px solid var(--border);
+                padding:6px 12px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" style="opacity:.35;flex-shrink:0;">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="buscar referências..."
+             style="border:none;background:transparent;padding:0;width:100%;font-size:11px;"
+             oninput="onSearchInput(this.value)">
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn-ghost" style="position:relative;padding:6px 8px;"
+              onclick="navigateTo('notifs')" aria-label="Notificações" title="Notificações">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        ${unread > 0
+          ? `<span style="position:absolute;top:3px;right:3px;width:7px;height:7px;
+                          background:var(--text);border-radius:50%;"></span>`
+          : ''}
+      </button>
+      <button class="btn-ghost" onclick="openDrawer()">+ PIN</button>
+      <span onclick="navigateTo('profile')" title="${CURRENT_USER.name}"
+            style="cursor:pointer;">${avatarHTML(CURRENT_USER.id, 28)}</span>
+    </div>
+  </nav>`;
+}
+
+// ── CATEGORY TABS ────────────────────────────────────────────
+function renderCategoryTabs() {
+  return `
+  <div style="display:flex;align-items:center;padding:0 20px;
+              border-bottom:1px solid var(--border);overflow-x:auto;
+              scrollbar-width:none;">
+    ${CATEGORIES.map(cat => {
+      const active = STATE.feedCategory === cat;
+      return `<button onclick="filterCategory('${cat}')"
+        style="background:none;border:none;
+               border-bottom:${active ? '2px solid var(--text)' : '2px solid transparent'};
+               color:${active ? 'var(--text)' : 'var(--text-muted)'};
+               font-family:var(--font);font-size:9px;font-weight:700;
+               letter-spacing:1.2px;text-transform:uppercase;
+               padding:9px 14px;cursor:pointer;white-space:nowrap;
+               margin-bottom:-1px;transition:color 0.15s;">${cat}</button>`;
+    }).join('')}
+  </div>`;
+}
+
+// ── PIN CARD ─────────────────────────────────────────────────
+function renderPinCard(pin) {
+  const imgH   = Math.round(180 * pin.aspect);
+  const liked  = STATE.likedPins.has(pin.id);
+  const saved  = STATE.savedPins.has(pin.id);
+  const author = getUser(pin.author);
+  return `
+  <div style="border:0.5px solid var(--border);margin-bottom:6px;
+              break-inside:avoid;cursor:pointer;transition:border-color .15s;"
+       onclick="openPin('${pin.id}')"
+       onmouseover="this.style.borderColor='var(--border-strong)'"
+       onmouseout="this.style.borderColor='var(--border)'">
+    <div style="position:relative;background:var(--surface-hover);
+                height:${imgH}px;display:flex;align-items:center;
+                justify-content:center;overflow:hidden;
+                filter:grayscale(1) contrast(1.15);">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+           stroke="rgba(237,232,213,.1)" stroke-width="1">
+        <rect x="3" y="3" width="18" height="18"/>
+        <circle cx="9" cy="9" r="2"/>
+        <path d="m21 15-5-5L5 21"/>
+      </svg>
+      <span style="position:absolute;top:6px;right:6px;font-size:7px;font-weight:700;
+                   letter-spacing:.1em;text-transform:uppercase;
+                   background:rgba(0,0,0,.55);color:var(--text);
+                   padding:2px 5px;">${pin.category}</span>
+    </div>
+    <div style="background:var(--surface);padding:7px 8px;">
+      <p style="font-size:10px;font-weight:700;color:var(--text);margin:0 0 5px;
+                text-transform:uppercase;letter-spacing:.02em;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        ${pin.title}
+      </p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          ${avatarHTML(pin.author, 16)}
+          <span style="font-size:8px;color:var(--text-muted);">@${author.handle}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;"
+             onclick="event.stopPropagation()">
+          <span style="font-size:8px;color:var(--text-muted);">
+            ${pin.likes + (liked ? 1 : 0)}
+          </span>
+          <button onclick="toggleLike('${pin.id}')"
+                  style="background:none;border:none;cursor:pointer;padding:0;
+                         color:${liked ? 'var(--text)' : 'var(--text-muted)'};
+                         font-size:15px;line-height:1;" aria-label="Curtir">
+            ${liked ? '♥' : '♡'}
+          </button>
+          <button onclick="toggleSave('${pin.id}')"
+                  style="background:none;border:none;cursor:pointer;padding:0;
+                         color:${saved ? 'var(--text)' : 'var(--text-muted)'};
+                         font-size:14px;line-height:1;" aria-label="Salvar">
+            ${saved ? '⊞' : '⊟'}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// Placeholders for screen functions — filled in Tasks 4-7
 function renderLogin()         { return '<p style="padding:48px;color:var(--text-muted)">TODO: login</p>'; }
 function renderFeed()          { return '<p style="padding:48px;color:var(--text-muted)">TODO: feed</p>'; }
 function renderPinDetail()     { return '<p style="padding:48px;color:var(--text-muted)">TODO: pin detail</p>'; }
