@@ -114,7 +114,119 @@ label.field-label {
             z-index:101;transform:translateX(100%);transition:transform 0.25s ease;
             overflow-y:auto;display:flex;flex-direction:column;"></div>
 <script>
-// Tasks 2-8 fill this script block
+// ── MOCK DATA ────────────────────────────────────────────────
+const USERS = [
+  { id:'u1', name:'Lucas Andrade',  handle:'lucas', initials:'LA' },
+  { id:'u2', name:'Ana Moraes',     handle:'ana',   initials:'AM' },
+  { id:'u3', name:'Beto Ramos',     handle:'beto',  initials:'BR' },
+  { id:'u4', name:'Carol Assis',    handle:'carol', initials:'CA' },
+  { id:'u5', name:'Feli Costa',     handle:'feli',  initials:'FC' },
+  { id:'u6', name:'Mari Rocha',     handle:'mari',  initials:'MR' },
+  { id:'u7', name:'Duda Lima',      handle:'duda',  initials:'DL' },
+  { id:'u8', name:'Tati Nunes',     handle:'tati',  initials:'TN' },
+];
+
+const CURRENT_USER = USERS[0];
+
+const CATEGORIES = ['TODOS','MOTION','IDENTIDADE','COPY','UI/UX','CAMPANHA','TIPOGRAFIA','OOH'];
+
+const PINS = [
+  { id:'p1',  title:'NIKE — FEEL IT',      category:'MOTION',     tags:['sport','emotion'],         author:'u1', likes:12, aspect:1.4,  url:'https://nike.com' },
+  { id:'p2',  title:'COSMOS REBRAND',      category:'IDENTIDADE', tags:['minimal','identity'],      author:'u3', likes:28, aspect:0.8,  url:'https://cosmos.so' },
+  { id:'p3',  title:'APPLE PRIVACY',       category:'CAMPANHA',   tags:['tech','manifesto'],        author:'u4', likes:41, aspect:1.6,  url:'https://apple.com' },
+  { id:'p4',  title:'NEUE HAAS IN USE',    category:'TIPOGRAFIA', tags:['helvetica','type'],        author:'u5', likes:7,  aspect:1.0,  url:'' },
+  { id:'p5',  title:'LINEAR DESIGN SYS',   category:'UI/UX',      tags:['ui','system','dark'],      author:'u6', likes:19, aspect:1.2,  url:'https://linear.app' },
+  { id:'p6',  title:'BK WHOPPER OOH',      category:'OOH',        tags:['food','outdoor'],          author:'u2', likes:5,  aspect:0.6,  url:'' },
+  { id:'p7',  title:'SPOTIFY WRAPPED',     category:'CAMPANHA',   tags:['data','music','social'],   author:'u7', likes:33, aspect:1.8,  url:'https://spotify.com' },
+  { id:'p8',  title:'INTER TYPEFACE',      category:'TIPOGRAFIA', tags:['open','grotesque'],        author:'u1', likes:15, aspect:0.9,  url:'' },
+  { id:'p9',  title:'PORTO ALEGRE OOH',    category:'OOH',        tags:['brasil','urban'],          author:'u3', likes:8,  aspect:0.7,  url:'' },
+  { id:'p10', title:'FIGMA CONFIG 24',     category:'UI/UX',      tags:['ux','conference'],         author:'u4', likes:22, aspect:1.3,  url:'https://figma.com' },
+  { id:'p11', title:'CHANEL N°5 FILM',     category:'MOTION',     tags:['luxury','cinematic'],      author:'u8', likes:47, aspect:1.7,  url:'' },
+  { id:'p12', title:'PENTAGRAM WORK',      category:'IDENTIDADE', tags:['branding','studio'],       author:'u2', likes:31, aspect:1.1,  url:'https://pentagram.com' },
+  { id:'p13', title:'GUGGENHEIM TYPE',     category:'TIPOGRAFIA', tags:['museum','display'],        author:'u5', likes:14, aspect:0.85, url:'' },
+  { id:'p14', title:'OATLY — WEIRD',       category:'COPY',       tags:['voice','humor','brand'],   author:'u6', likes:38, aspect:1.5,  url:'https://oatly.com' },
+  { id:'p15', title:'TEENAGE DREAMS',      category:'CAMPANHA',   tags:['fashion','youth'],         author:'u7', likes:11, aspect:1.0,  url:'' },
+  { id:'p16', title:'FRAMER MOTION',       category:'MOTION',     tags:['web','interaction'],       author:'u3', likes:26, aspect:1.35, url:'https://framer.com' },
+  { id:'p17', title:'BRUTALIST WEB',       category:'UI/UX',      tags:['brutalist','bold'],        author:'u1', likes:9,  aspect:1.6,  url:'' },
+  { id:'p18', title:'DOVE REAL BEAUTY',    category:'COPY',       tags:['manifesto','brand'],       author:'u4', likes:44, aspect:0.75, url:'' },
+  { id:'p19', title:'PRADA BILLBOARD',     category:'OOH',        tags:['luxury','fashion'],        author:'u8', likes:17, aspect:1.2,  url:'' },
+  { id:'p20', title:'VEJA COLLAB',         category:'IDENTIDADE', tags:['collab','streetwear'],     author:'u2', likes:23, aspect:1.0,  url:'https://veja.fr' },
+];
+
+const NOTIFICATIONS = [
+  { id:'n1', type:'mention', from:'u3', pinId:'p5', read:false },
+  { id:'n2', type:'like',    from:'u4', pinId:'p1', read:false },
+  { id:'n3', type:'save',    from:'u2', pinId:'p1', read:true  },
+  { id:'n4', type:'mention', from:'u6', pinId:'p8', read:true  },
+];
+
+// ── STATE ────────────────────────────────────────────────────
+const STATE = {
+  screen:       'login',
+  pinId:        null,
+  feedCategory: 'TODOS',
+  feedScrollY:  0,
+  likedPins:    new Set(),
+  savedPins:    new Set(['p3','p5']),
+  profileTab:   'mine',
+  searchQuery:  '',
+};
+
+// ── NAVIGATION ───────────────────────────────────────────────
+function navigateTo(screen, params = {}) {
+  if (STATE.screen === 'feed') STATE.feedScrollY = window.scrollY;
+  Object.assign(STATE, { screen, ...params });
+  render();
+  window.scrollTo(0, 0);
+  history.pushState({ screen, ...params }, '', '#' + screen);
+}
+
+function goBack() {
+  const y = STATE.feedScrollY;
+  history.back();
+  // popstate handler restores scroll after render
+}
+
+window.addEventListener('popstate', e => {
+  if (!e.state) return;
+  Object.assign(STATE, e.state);
+  render();
+  if (e.state.screen === 'feed') {
+    requestAnimationFrame(() => window.scrollTo(0, STATE.feedScrollY));
+  }
+});
+
+function render() {
+  const app = document.getElementById('app');
+  if (STATE.screen === 'login')   app.innerHTML = renderLogin();
+  else if (STATE.screen === 'feed')    app.innerHTML = renderFeed();
+  else if (STATE.screen === 'pin')     app.innerHTML = renderPinDetail();
+  else if (STATE.screen === 'profile') app.innerHTML = renderProfile();
+  else if (STATE.screen === 'notifs')  app.innerHTML = renderNotifications();
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function getUser(id) { return USERS.find(u => u.id === id); }
+function getPin(id)  { return PINS.find(p => p.id === id); }
+
+function avatarHTML(userId, size = 20) {
+  const u = getUser(userId);
+  if (!u) return '';
+  return `<span class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.floor(size*0.38)}px;">${u.initials}</span>`;
+}
+
+// Placeholders for screen functions — filled in Tasks 3-7
+function renderLogin()         { return '<p style="padding:48px;color:var(--text-muted)">TODO: login</p>'; }
+function renderFeed()          { return '<p style="padding:48px;color:var(--text-muted)">TODO: feed</p>'; }
+function renderPinDetail()     { return '<p style="padding:48px;color:var(--text-muted)">TODO: pin detail</p>'; }
+function renderProfile()       { return '<p style="padding:48px;color:var(--text-muted)">TODO: profile</p>'; }
+function renderNotifications() { return '<p style="padding:48px;color:var(--text-muted)">TODO: notifications</p>'; }
+
+// ── BOOT ─────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  history.replaceState({ screen:'login' }, '', '#login');
+  render();
+});
 </script>
 </body>
 </html>
