@@ -41,8 +41,11 @@ async function seed() {
       email_confirm: true,
       user_metadata: { full_name: user.name },
     })
-    if (error && !error.message.includes('already been registered')) {
-      console.error(`✗ ${user.email}: ${error.message}`)
+    if (error) {
+      if (!error.message.includes('already been registered')) {
+        console.error(`✗ ${user.email}: ${error.message}`)
+      }
+      // silently skip duplicates
     } else {
       console.log(`✓ ${user.email}`)
     }
