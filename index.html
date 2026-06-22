@@ -435,6 +435,228 @@ function renderPinDetail()     { return '<p style="padding:48px;color:var(--text
 function renderProfile()       { return '<p style="padding:48px;color:var(--text-muted)">TODO: profile</p>'; }
 function renderNotifications() { return '<p style="padding:48px;color:var(--text-muted)">TODO: notifications</p>'; }
 
+// ── DRAWER ───────────────────────────────────────────────────
+let _drawerTags     = [];
+let _mentionedUsers = [];
+
+function openDrawer() {
+  _drawerTags     = [];
+  _mentionedUsers = [];
+  const drawer = document.getElementById('drawer');
+  drawer.innerHTML = _drawerContent();
+  document.getElementById('drawer-overlay').style.display = 'block';
+  requestAnimationFrame(() => { drawer.style.transform = 'translateX(0)'; });
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById('drawer');
+  drawer.style.transform = 'translateX(100%)';
+  setTimeout(() => {
+    document.getElementById('drawer-overlay').style.display = 'none';
+  }, 250);
+}
+
+function _drawerContent() {
+  return `
+  <div style="padding:20px;flex:1;overflow-y:auto;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <span class="caption">NOVO PIN</span>
+      <button onclick="closeDrawer()"
+              style="background:none;border:none;cursor:pointer;
+                     color:var(--text-muted);font-size:22px;line-height:1;padding:0;"
+              aria-label="Fechar">×</button>
+    </div>
+
+    <!-- Image upload -->
+    <div class="field">
+      <label class="field-label">Imagem *</label>
+      <div id="upload-area"
+           onclick="document.getElementById('file-input').click()"
+           style="border:1px dashed var(--border-strong);padding:24px;
+                  text-align:center;cursor:pointer;transition:border-color .15s;"
+           onmouseover="this.style.borderColor='var(--text)'"
+           onmouseout="this.style.borderColor='var(--border-strong)'">
+        <p class="caption" style="color:var(--text-muted);">ARRASTE OU CLIQUE PARA ENVIAR</p>
+        <p class="body-sm" style="color:var(--text-faint);margin-top:4px;">JPG · PNG · GIF · WebP</p>
+      </div>
+      <input id="file-input" type="file" accept="image/*"
+             style="display:none;" onchange="_previewImage(this)">
+      <div id="img-preview" style="margin-top:8px;display:none;">
+        <img id="preview-img"
+             style="width:100%;max-height:200px;object-fit:cover;display:block;
+                    filter:grayscale(1) contrast(1.15);">
+      </div>
+    </div>
+
+    <!-- URL -->
+    <div class="field">
+      <label class="field-label">URL de origem</label>
+      <input type="url" id="d-url" placeholder="https://...">
+    </div>
+
+    <!-- Title -->
+    <div class="field">
+      <label class="field-label">Título *</label>
+      <input type="text" id="d-title" placeholder="NOME DA REFERÊNCIA"
+             style="text-transform:uppercase;">
+    </div>
+
+    <!-- Category -->
+    <div class="field">
+      <label class="field-label">Categoria *</label>
+      <select id="d-cat">
+        ${CATEGORIES.filter(c => c !== 'TODOS').map(c =>
+          `<option value="${c}">${c}</option>`
+        ).join('')}
+      </select>
+    </div>
+
+    <!-- Tags -->
+    <div class="field">
+      <label class="field-label">Tags</label>
+      <input type="text" id="d-tags-input"
+             placeholder="digite e pressione Enter"
+             onkeydown="_addTagOnEnter(event)">
+      <div id="tags-container"
+           style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>
+    </div>
+
+    <!-- Mention -->
+    <div class="field">
+      <label class="field-label">Mencionar alguém</label>
+      <div style="position:relative;">
+        <input type="text" id="d-mention" placeholder="@nome"
+               oninput="_showMentionDD(this.value)">
+        <div id="mention-dd"
+             style="display:none;position:absolute;top:100%;left:0;right:0;
+                    background:#222;border:1px solid var(--border);z-index:5;
+                    max-height:140px;overflow-y:auto;"></div>
+      </div>
+      <div id="mentions-list"
+           style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>
+    </div>
+
+    <!-- Notes -->
+    <div class="field">
+      <label class="field-label">Notas</label>
+      <textarea id="d-notes" rows="3"
+                placeholder="contexto, por que essa referência é relevante..."></textarea>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div style="padding:16px 20px;border-top:1px solid var(--border);">
+    <button class="btn-primary" onclick="submitPin()">PUBLICAR PIN</button>
+  </div>`;
+}
+
+function _previewImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('img-preview').style.display = 'block';
+    document.getElementById('upload-area').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function _addTagOnEnter(e) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const input = document.getElementById('d-tags-input');
+  const val   = input.value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!val || _drawerTags.includes(val)) { input.value = ''; return; }
+  _drawerTags.push(val);
+  input.value = '';
+  _refreshTagsUI();
+}
+
+function _removeTag(tag) {
+  _drawerTags = _drawerTags.filter(t => t !== tag);
+  _refreshTagsUI();
+}
+
+function _refreshTagsUI() {
+  document.getElementById('tags-container').innerHTML = _drawerTags
+    .map(t => `<span class="tag-pill">${t}<span class="remove" onclick="_removeTag('${t}')">×</span></span>`)
+    .join('');
+}
+
+function _showMentionDD(val) {
+  const dd = document.getElementById('mention-dd');
+  const q  = val.replace('@', '').toLowerCase();
+  if (!q) { dd.style.display = 'none'; return; }
+  const matches = USERS.filter(u =>
+    u.name.toLowerCase().includes(q) || u.handle.includes(q)
+  );
+  if (!matches.length) { dd.style.display = 'none'; return; }
+  dd.style.display = 'block';
+  dd.innerHTML = matches.map(u => `
+    <div onclick="_selectMention('${u.id}')"
+         style="padding:8px 12px;cursor:pointer;display:flex;
+                align-items:center;gap:8px;font-size:11px;"
+         onmouseover="this.style.background='#333'"
+         onmouseout="this.style.background=''">
+      ${avatarHTML(u.id, 18)}
+      <span>@${u.handle}</span>
+      <span style="color:var(--text-muted);font-size:10px;">${u.name}</span>
+    </div>`).join('');
+}
+
+function _selectMention(userId) {
+  if (_mentionedUsers.includes(userId)) return;
+  _mentionedUsers.push(userId);
+  document.getElementById('d-mention').value = '';
+  document.getElementById('mention-dd').style.display = 'none';
+  _refreshMentionsUI();
+}
+
+function _removeMention(userId) {
+  _mentionedUsers = _mentionedUsers.filter(id => id !== userId);
+  _refreshMentionsUI();
+}
+
+function _refreshMentionsUI() {
+  document.getElementById('mentions-list').innerHTML = _mentionedUsers.map(id => {
+    const u = getUser(id);
+    return `<span class="tag-pill">@${u.handle}<span class="remove" onclick="_removeMention('${id}')">×</span></span>`;
+  }).join('');
+}
+
+function submitPin() {
+  const title = (document.getElementById('d-title').value || '').trim().toUpperCase();
+  const cat   = document.getElementById('d-cat').value;
+  if (!title) {
+    document.getElementById('d-title').style.borderColor = 'rgba(237,232,213,.6)';
+    document.getElementById('d-title').focus();
+    return;
+  }
+  const newPin = {
+    id:       'p' + Date.now(),
+    title,
+    category: cat,
+    tags:     [..._drawerTags],
+    author:   CURRENT_USER.id,
+    likes:    0,
+    aspect:   1.0,
+    url:      (document.getElementById('d-url').value || '').trim(),
+    notes:    (document.getElementById('d-notes').value || '').trim(),
+  };
+  PINS.unshift(newPin);
+  _mentionedUsers.forEach(() => {
+    NOTIFICATIONS.unshift({
+      id: 'n' + Date.now(), type: 'mention',
+      from: CURRENT_USER.id, pinId: newPin.id, read: false,
+    });
+  });
+  closeDrawer();
+  navigateTo('feed');
+}
+
 // ── BOOT ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   history.replaceState({ screen:'login' }, '', '#login');
