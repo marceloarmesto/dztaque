@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LoginButton from './LoginButton'
+import EmailLoginForm from './EmailLoginForm'
 
 export default async function LoginPage({
   searchParams,
@@ -57,6 +58,8 @@ export default async function LoginPage({
         )}
 
         <LoginButton />
+
+        <EmailLoginForm />
 
         <p className="caption" style={{ color: 'var(--text-faint)', marginTop: '56px' }}>
           DZESTÚDIO
