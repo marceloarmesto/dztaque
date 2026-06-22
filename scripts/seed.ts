@@ -9,15 +9,15 @@ envContent.split('\n').forEach(line => {
 })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+const secretKey = process.env.SUPABASE_SECRET_KEY
 const testPassword = process.env.SEED_TEST_PASSWORD
 
-if (!supabaseUrl || !serviceRoleKey || !testPassword) {
-  console.error('Missing env vars. Check .env.local has NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SEED_TEST_PASSWORD')
+if (!supabaseUrl || !secretKey || !testPassword) {
+  console.error('Missing env vars. Check .env.local has NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY, SEED_TEST_PASSWORD')
   process.exit(1)
 }
 
-const supabase = createClient(supabaseUrl, serviceRoleKey, {
+const supabase = createClient(supabaseUrl, secretKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
