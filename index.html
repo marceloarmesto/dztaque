@@ -647,10 +647,10 @@ function submitPin() {
     notes:    (document.getElementById('d-notes').value || '').trim(),
   };
   PINS.unshift(newPin);
-  _mentionedUsers.forEach(() => {
+  _mentionedUsers.forEach(toUserId => {
     NOTIFICATIONS.unshift({
       id: 'n' + Date.now(), type: 'mention',
-      from: CURRENT_USER.id, pinId: newPin.id, read: false,
+      from: CURRENT_USER.id, to: toUserId, pinId: newPin.id, read: false,
     });
   });
   closeDrawer();
