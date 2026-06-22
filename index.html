@@ -128,29 +128,28 @@ const USERS = [
 
 const CURRENT_USER = USERS[0];
 
-const CATEGORIES = ['TODOS','MOTION','IDENTIDADE','COPY','UI/UX','CAMPANHA','TIPOGRAFIA','OOH'];
-
+// Pins now use free-text `collection` per user instead of fixed categories
 const PINS = [
-  { id:'p1',  title:'NIKE — FEEL IT',      category:'MOTION',     tags:['sport','emotion'],         author:'u1', likes:12, aspect:1.4,  url:'https://nike.com' },
-  { id:'p2',  title:'COSMOS REBRAND',      category:'IDENTIDADE', tags:['minimal','identity'],      author:'u3', likes:28, aspect:0.8,  url:'https://cosmos.so' },
-  { id:'p3',  title:'APPLE PRIVACY',       category:'CAMPANHA',   tags:['tech','manifesto'],        author:'u4', likes:41, aspect:1.6,  url:'https://apple.com' },
-  { id:'p4',  title:'NEUE HAAS IN USE',    category:'TIPOGRAFIA', tags:['helvetica','type'],        author:'u5', likes:7,  aspect:1.0,  url:'' },
-  { id:'p5',  title:'LINEAR DESIGN SYS',   category:'UI/UX',      tags:['ui','system','dark'],      author:'u6', likes:19, aspect:1.2,  url:'https://linear.app' },
-  { id:'p6',  title:'BK WHOPPER OOH',      category:'OOH',        tags:['food','outdoor'],          author:'u2', likes:5,  aspect:0.6,  url:'' },
-  { id:'p7',  title:'SPOTIFY WRAPPED',     category:'CAMPANHA',   tags:['data','music','social'],   author:'u7', likes:33, aspect:1.8,  url:'https://spotify.com' },
-  { id:'p8',  title:'INTER TYPEFACE',      category:'TIPOGRAFIA', tags:['open','grotesque'],        author:'u1', likes:15, aspect:0.9,  url:'' },
-  { id:'p9',  title:'PORTO ALEGRE OOH',    category:'OOH',        tags:['brasil','urban'],          author:'u3', likes:8,  aspect:0.7,  url:'' },
-  { id:'p10', title:'FIGMA CONFIG 24',     category:'UI/UX',      tags:['ux','conference'],         author:'u4', likes:22, aspect:1.3,  url:'https://figma.com' },
-  { id:'p11', title:'CHANEL N°5 FILM',     category:'MOTION',     tags:['luxury','cinematic'],      author:'u8', likes:47, aspect:1.7,  url:'' },
-  { id:'p12', title:'PENTAGRAM WORK',      category:'IDENTIDADE', tags:['branding','studio'],       author:'u2', likes:31, aspect:1.1,  url:'https://pentagram.com' },
-  { id:'p13', title:'GUGGENHEIM TYPE',     category:'TIPOGRAFIA', tags:['museum','display'],        author:'u5', likes:14, aspect:0.85, url:'' },
-  { id:'p14', title:'OATLY — WEIRD',       category:'COPY',       tags:['voice','humor','brand'],   author:'u6', likes:38, aspect:1.5,  url:'https://oatly.com' },
-  { id:'p15', title:'TEENAGE DREAMS',      category:'CAMPANHA',   tags:['fashion','youth'],         author:'u7', likes:11, aspect:1.0,  url:'' },
-  { id:'p16', title:'FRAMER MOTION',       category:'MOTION',     tags:['web','interaction'],       author:'u3', likes:26, aspect:1.35, url:'https://framer.com' },
-  { id:'p17', title:'BRUTALIST WEB',       category:'UI/UX',      tags:['brutalist','bold'],        author:'u1', likes:9,  aspect:1.6,  url:'' },
-  { id:'p18', title:'DOVE REAL BEAUTY',    category:'COPY',       tags:['manifesto','brand'],       author:'u4', likes:44, aspect:0.75, url:'' },
-  { id:'p19', title:'PRADA BILLBOARD',     category:'OOH',        tags:['luxury','fashion'],        author:'u8', likes:17, aspect:1.2,  url:'' },
-  { id:'p20', title:'VEJA COLLAB',         category:'IDENTIDADE', tags:['collab','streetwear'],     author:'u2', likes:23, aspect:1.0,  url:'https://veja.fr' },
+  { id:'p1',  title:'NIKE — FEEL IT',      collection:'Campanha Nike',        tags:['sport','emotion'],         author:'u1', likes:12, aspect:1.4,  url:'https://nike.com' },
+  { id:'p2',  title:'COSMOS REBRAND',      collection:'Identidade visual',    tags:['minimal','identity'],      author:'u3', likes:28, aspect:0.8,  url:'https://cosmos.so' },
+  { id:'p3',  title:'APPLE PRIVACY',       collection:'Campanhas sociais',    tags:['tech','manifesto'],        author:'u4', likes:41, aspect:1.6,  url:'https://apple.com' },
+  { id:'p4',  title:'NEUE HAAS IN USE',    collection:'Fontes favoritas',     tags:['helvetica','type'],        author:'u5', likes:7,  aspect:1.0,  url:'' },
+  { id:'p5',  title:'LINEAR DESIGN SYS',   collection:'Dark UI',              tags:['ui','system','dark'],      author:'u6', likes:19, aspect:1.2,  url:'https://linear.app' },
+  { id:'p6',  title:'BK WHOPPER OOH',      collection:'Outdoor ideas',        tags:['food','outdoor'],          author:'u2', likes:5,  aspect:0.6,  url:'' },
+  { id:'p7',  title:'SPOTIFY WRAPPED',     collection:'Social media',         tags:['data','music','social'],   author:'u7', likes:33, aspect:1.8,  url:'https://spotify.com' },
+  { id:'p8',  title:'INTER TYPEFACE',      collection:'Referências de tipo',  tags:['open','grotesque'],        author:'u1', likes:15, aspect:0.9,  url:'' },
+  { id:'p9',  title:'PORTO ALEGRE OOH',    collection:'Identidade visual',    tags:['brasil','urban'],          author:'u3', likes:8,  aspect:0.7,  url:'' },
+  { id:'p10', title:'FIGMA CONFIG 24',     collection:'Campanhas sociais',    tags:['ux','conference'],         author:'u4', likes:22, aspect:1.3,  url:'https://figma.com' },
+  { id:'p11', title:'CHANEL N°5 FILM',     collection:'Luxury branding',      tags:['luxury','cinematic'],      author:'u8', likes:47, aspect:1.7,  url:'' },
+  { id:'p12', title:'PENTAGRAM WORK',      collection:'Marcas que funcionam', tags:['branding','studio'],       author:'u2', likes:31, aspect:1.1,  url:'https://pentagram.com' },
+  { id:'p13', title:'GUGGENHEIM TYPE',     collection:'Fontes favoritas',     tags:['museum','display'],        author:'u5', likes:14, aspect:0.85, url:'' },
+  { id:'p14', title:'OATLY — WEIRD',       collection:'Dark UI',              tags:['voice','humor','brand'],   author:'u6', likes:38, aspect:1.5,  url:'https://oatly.com' },
+  { id:'p15', title:'TEENAGE DREAMS',      collection:'Social media',         tags:['fashion','youth'],         author:'u7', likes:11, aspect:1.0,  url:'' },
+  { id:'p16', title:'FRAMER MOTION',       collection:'Motion refs',          tags:['web','interaction'],       author:'u3', likes:26, aspect:1.35, url:'https://framer.com' },
+  { id:'p17', title:'BRUTALIST WEB',       collection:'UI inspirações',       tags:['brutalist','bold'],        author:'u1', likes:9,  aspect:1.6,  url:'' },
+  { id:'p18', title:'DOVE REAL BEAUTY',    collection:'Campanhas sociais',    tags:['manifesto','brand'],       author:'u4', likes:44, aspect:0.75, url:'' },
+  { id:'p19', title:'PRADA BILLBOARD',     collection:'Luxury branding',      tags:['luxury','fashion'],        author:'u8', likes:17, aspect:1.2,  url:'' },
+  { id:'p20', title:'VEJA COLLAB',         collection:'Marcas que funcionam', tags:['collab','streetwear'],     author:'u2', likes:23, aspect:1.0,  url:'https://veja.fr' },
 ];
 
 const NOTIFICATIONS = [
@@ -162,14 +161,14 @@ const NOTIFICATIONS = [
 
 // ── STATE ────────────────────────────────────────────────────
 const STATE = {
-  screen:       'login',
-  pinId:        null,
-  feedCategory: 'TODOS',
-  feedScrollY:  0,
-  likedPins:    new Set(),
-  savedPins:    new Set(['p3','p5']),
-  profileTab:   'mine',
-  searchQuery:  '',
+  screen:         'login',
+  pinId:          null,
+  feedCollection: 'TODOS',
+  feedScrollY:    0,
+  likedPins:      new Set(),
+  savedPins:      new Set(['p3','p5']),
+  profileTab:     'mine',
+  searchQuery:    '',
 };
 
 // ── NAVIGATION ───────────────────────────────────────────────
@@ -182,9 +181,7 @@ function navigateTo(screen, params = {}) {
 }
 
 function goBack() {
-  const y = STATE.feedScrollY;
   history.back();
-  // popstate handler restores scroll after render
 }
 
 window.addEventListener('popstate', e => {
@@ -213,6 +210,32 @@ function avatarHTML(userId, size = 20) {
   const u = getUser(userId);
   if (!u) return '';
   return `<span class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.floor(size*0.38)}px;">${u.initials}</span>`;
+}
+
+// Returns unique collection names for a given user (from their pins)
+function getUserCollections(userId) {
+  const seen = new Set();
+  return PINS
+    .filter(p => p.author === userId)
+    .reduce((acc, p) => {
+      if (!seen.has(p.collection)) { seen.add(p.collection); acc.push(p.collection); }
+      return acc;
+    }, []);
+}
+
+// Returns up to n most recently added unique collection names across all users
+// "Most recent" = first distinct names when iterating PINS from index 0 (newest first)
+function getRecentCollections(n = 3) {
+  const seen = new Set();
+  const result = [];
+  for (const p of PINS) {
+    if (!seen.has(p.collection)) {
+      seen.add(p.collection);
+      result.push(p.collection);
+      if (result.length === n) break;
+    }
+  }
+  return result;
 }
 
 // ── NAV BAR ──────────────────────────────────────────────────
@@ -253,22 +276,25 @@ function renderNavBar() {
   </nav>`;
 }
 
-// ── CATEGORY TABS ────────────────────────────────────────────
-function renderCategoryTabs() {
+// ── COLLECTION TABS ──────────────────────────────────────────
+// Shows TODOS + the 3 most recently created collections across the DZ
+function renderCollectionTabs() {
+  const recent = getRecentCollections(3);
+  const tabs   = ['TODOS', ...recent];
   return `
   <div style="display:flex;align-items:center;padding:0 20px;
               border-bottom:1px solid var(--border);overflow-x:auto;
               scrollbar-width:none;">
-    ${CATEGORIES.map(cat => {
-      const active = STATE.feedCategory === cat;
-      return `<button onclick="filterCategory('${cat}')"
+    ${tabs.map(col => {
+      const active = STATE.feedCollection === col;
+      return `<button onclick="filterCollection(${JSON.stringify(col)})"
         style="background:none;border:none;
                border-bottom:${active ? '2px solid var(--text)' : '2px solid transparent'};
                color:${active ? 'var(--text)' : 'var(--text-muted)'};
                font-family:var(--font);font-size:9px;font-weight:700;
                letter-spacing:1.2px;text-transform:uppercase;
                padding:9px 14px;cursor:pointer;white-space:nowrap;
-               margin-bottom:-1px;transition:color 0.15s;">${cat}</button>`;
+               margin-bottom:-1px;transition:color 0.15s;">${col}</button>`;
     }).join('')}
   </div>`;
 }
@@ -296,9 +322,10 @@ function renderPinCard(pin) {
         <path d="m21 15-5-5L5 21"/>
       </svg>
       <span style="position:absolute;top:6px;right:6px;font-size:7px;font-weight:700;
-                   letter-spacing:.1em;text-transform:uppercase;
+                   letter-spacing:.08em;text-transform:none;
                    background:rgba(0,0,0,.55);color:var(--text);
-                   padding:2px 5px;">${pin.category}</span>
+                   padding:2px 6px;max-width:120px;white-space:nowrap;
+                   overflow:hidden;text-overflow:ellipsis;">${pin.collection}</span>
     </div>
     <div style="background:var(--surface);padding:7px 8px;">
       <p style="font-size:10px;font-weight:700;color:var(--text);margin:0 0 5px;
@@ -335,8 +362,8 @@ function renderPinCard(pin) {
 }
 
 // ── FEED FILTERS & HELPERS ──────────────────────────────────
-function filterCategory(cat) {
-  STATE.feedCategory = cat;
+function filterCollection(col) {
+  STATE.feedCollection = col;
   STATE.searchQuery = '';
   document.getElementById('app').innerHTML = renderFeed();
 }
@@ -348,15 +375,15 @@ function onSearchInput(query) {
 }
 
 function getDisplayPins() {
-  let pins = STATE.feedCategory === 'TODOS'
+  let pins = STATE.feedCollection === 'TODOS'
     ? PINS
-    : PINS.filter(p => p.category === STATE.feedCategory);
+    : PINS.filter(p => p.collection === STATE.feedCollection);
   if (STATE.searchQuery.trim()) {
     const q = STATE.searchQuery.toLowerCase();
     pins = pins.filter(p =>
       p.title.toLowerCase().includes(q) ||
       p.tags.some(t => t.includes(q)) ||
-      p.category.toLowerCase().includes(q)
+      p.collection.toLowerCase().includes(q)
     );
   }
   return pins;
@@ -382,7 +409,6 @@ function renderLogin() {
   <div style="min-height:100vh;display:flex;flex-direction:column;
               align-items:center;justify-content:center;padding:48px;
               text-align:center;position:relative;overflow:hidden;">
-    <!-- wordmark-repeat texture -->
     <div aria-hidden="true"
          style="position:absolute;inset:0;overflow:hidden;opacity:.035;
                 font-size:10px;font-weight:700;letter-spacing:2px;
@@ -417,7 +443,7 @@ function renderFeed() {
   const pins = getDisplayPins();
   return `
   ${renderNavBar()}
-  ${renderCategoryTabs()}
+  ${renderCollectionTabs()}
   <div style="padding:12px 20px;" id="feed-area">
     <div id="masonry-grid">
       ${renderMasonryGrid(pins)}
@@ -432,11 +458,56 @@ function renderFeed() {
 
 // ── PROFILE SCREEN ──────────────────────────────────────────
 function renderProfile() {
-  const myPins = PINS.filter(p => p.author === CURRENT_USER.id);
-  const saved  = PINS.filter(p => STATE.savedPins.has(p.id));
-  const pins   = STATE.profileTab === 'mine' ? myPins : saved;
-  const cols   = [[], [], []];
-  pins.forEach((p, i) => cols[i % 3].push(p));
+  const myPins      = PINS.filter(p => p.author === CURRENT_USER.id);
+  const savedPins   = PINS.filter(p => STATE.savedPins.has(p.id));
+  const collections = getUserCollections(CURRENT_USER.id);
+
+  let content = '';
+  if (STATE.profileTab === 'mine') {
+    const cols = [[], [], []];
+    myPins.forEach((p, i) => cols[i % 3].push(p));
+    content = myPins.length
+      ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+           ${cols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
+         </div>`
+      : `<p class="caption" style="color:var(--text-faint);padding:48px;text-align:center;">NENHUM PIN PUBLICADO</p>`;
+  } else if (STATE.profileTab === 'collections') {
+    content = collections.length
+      ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+           ${collections.map(col => {
+             const colPins = myPins.filter(p => p.collection === col);
+             return `
+             <div onclick="filterCollection(${JSON.stringify(col)});navigateTo('feed')"
+                  style="border:0.5px solid var(--border);cursor:pointer;
+                         transition:border-color .15s;"
+                  onmouseover="this.style.borderColor='var(--border-strong)'"
+                  onmouseout="this.style.borderColor='var(--border)'">
+               <div style="background:var(--surface-hover);height:100px;
+                           display:flex;align-items:center;justify-content:center;">
+                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="rgba(237,232,213,.15)" stroke-width="1.5">
+                   <rect x="2" y="7" width="20" height="14" rx="0"/>
+                   <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
+                 </svg>
+               </div>
+               <div style="background:var(--surface);padding:8px 10px;">
+                 <p style="font-size:11px;font-weight:700;color:var(--text);margin:0 0 3px;
+                           white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${col}</p>
+                 <p style="font-size:9px;color:var(--text-muted);">${colPins.length} ${colPins.length === 1 ? 'PIN' : 'PINS'}</p>
+               </div>
+             </div>`;
+           }).join('')}
+         </div>`
+      : `<p class="caption" style="color:var(--text-faint);padding:48px;text-align:center;">NENHUMA COLEÇÃO CRIADA</p>`;
+  } else {
+    const cols = [[], [], []];
+    savedPins.forEach((p, i) => cols[i % 3].push(p));
+    content = savedPins.length
+      ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+           ${cols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
+         </div>`
+      : `<p class="caption" style="color:var(--text-faint);padding:48px;text-align:center;">NENHUM PIN SALVO</p>`;
+  }
 
   return `
   ${renderNavBar()}
@@ -453,8 +524,8 @@ function renderProfile() {
           <p class="caption" style="color:var(--text-muted);">PINS</p>
         </div>
         <div>
-          <p style="font-size:20px;font-weight:700;">${STATE.savedPins.size}</p>
-          <p class="caption" style="color:var(--text-muted);">SALVOS</p>
+          <p style="font-size:20px;font-weight:700;">${collections.length}</p>
+          <p class="caption" style="color:var(--text-muted);">COLEÇÕES</p>
         </div>
         <div>
           <p style="font-size:20px;font-weight:700;">${myPins.reduce((acc,p) => acc+p.likes,0)}</p>
@@ -462,9 +533,8 @@ function renderProfile() {
         </div>
       </div>
     </div>
-    <!-- Tabs -->
     <div style="display:flex;">
-      ${[['mine','MEUS PINS'],['saved','SALVOS']].map(([tab, label]) => {
+      ${[['mine','MEUS PINS'],['collections','COLEÇÕES'],['saved','SALVOS']].map(([tab, label]) => {
         const active = STATE.profileTab === tab;
         return `<button onclick="switchProfileTab('${tab}')"
           style="background:none;border:none;
@@ -476,16 +546,7 @@ function renderProfile() {
       }).join('')}
     </div>
   </div>
-  <div style="padding:12px 20px;">
-    ${pins.length
-      ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
-           ${cols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
-         </div>`
-      : `<p class="caption" style="color:var(--text-faint);padding:48px;text-align:center;">
-           ${STATE.profileTab === 'mine' ? 'NENHUM PIN PUBLICADO' : 'NENHUM PIN SALVO'}
-         </p>`
-    }
-  </div>`;
+  <div style="padding:12px 20px;">${content}</div>`;
 }
 
 function switchProfileTab(tab) {
@@ -536,6 +597,7 @@ function renderNotifications() {
   </div>`;
 }
 
+// ── PIN DETAIL SCREEN ────────────────────────────────────────
 function renderPinDetail() {
   const pin = getPin(STATE.pinId);
   if (!pin) return `${renderNavBar()}<p class="caption" style="padding:48px;color:var(--text-faint);">PIN NÃO ENCONTRADO</p>`;
@@ -543,24 +605,21 @@ function renderPinDetail() {
   const author  = getUser(pin.author);
   const liked   = STATE.likedPins.has(pin.id);
   const saved   = STATE.savedPins.has(pin.id);
-  const related = PINS.filter(p => p.category === pin.category && p.id !== pin.id);
+  const related = PINS.filter(p => p.collection === pin.collection && p.id !== pin.id);
   const relCols = [[], [], []];
   related.forEach((p, i) => relCols[i % 3].push(p));
 
   return `
   ${renderNavBar()}
-  <!-- Back -->
   <div style="padding:12px 20px;border-bottom:1px solid var(--border);">
     <button class="btn-ghost" onclick="goBack()" style="gap:6px;font-size:9px;">
       ← VOLTAR
     </button>
   </div>
 
-  <!-- 2-column layout -->
   <div style="display:grid;grid-template-columns:60fr 40fr;
               min-height:calc(100vh - 120px);border-bottom:1px solid var(--border);">
 
-    <!-- Left: image -->
     <div style="padding:24px 20px;border-right:1px solid var(--border);">
       <div style="width:100%;min-height:420px;background:var(--surface-hover);
                   display:flex;align-items:center;justify-content:center;
@@ -574,12 +633,12 @@ function renderPinDetail() {
       </div>
     </div>
 
-    <!-- Right: metadata -->
     <div style="padding:24px 20px;display:flex;flex-direction:column;gap:16px;">
-      <span class="caption" style="color:var(--text-muted);">${pin.category}</span>
+      <span style="font-size:10px;font-weight:700;color:var(--text-muted);
+                   cursor:pointer;" onclick="filterCollection(${JSON.stringify(pin.collection)});navigateTo('feed')"
+            title="Ver coleção">${pin.collection} ↗</span>
       <h1 class="display-sm">${pin.title}</h1>
 
-      <!-- Author -->
       <div style="display:flex;align-items:center;gap:10px;
                   padding:14px 0;border-top:1px solid var(--border);
                   border-bottom:1px solid var(--border);">
@@ -590,16 +649,13 @@ function renderPinDetail() {
         </div>
       </div>
 
-      <!-- Tags -->
       ${pin.tags.length ? `
       <div style="display:flex;flex-wrap:wrap;gap:5px;">
         ${pin.tags.map(t => `<span class="tag-pill">${t}</span>`).join('')}
       </div>` : ''}
 
-      <!-- Notes -->
       ${pin.notes ? `<p style="font-size:13px;color:var(--text-muted);line-height:1.6;">${pin.notes}</p>` : ''}
 
-      <!-- Actions -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button onclick="toggleLike('${pin.id}')"
                 class="btn-ghost" style="gap:6px;">
@@ -617,7 +673,6 @@ function renderPinDetail() {
           : ''}
       </div>
 
-      <!-- Mention from detail page -->
       <div class="field" style="margin-bottom:0;">
         <label class="field-label">Enviar para alguém</label>
         <div style="position:relative;">
@@ -634,16 +689,15 @@ function renderPinDetail() {
     </div>
   </div>
 
-  <!-- Related pins -->
   <div style="padding:20px;">
     <p class="caption" style="margin-bottom:14px;color:var(--text-muted);">
-      MAIS COMO ESTE
+      MAIS DA COLEÇÃO "${pin.collection}"
     </p>
     ${related.length
       ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
            ${relCols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
          </div>`
-      : `<p class="caption" style="color:var(--text-faint);">NENHUMA REFERÊNCIA RELACIONADA</p>`
+      : `<p class="caption" style="color:var(--text-faint);">NENHUM OUTRO PIN NESTA COLEÇÃO</p>`
     }
   </div>`;
 }
@@ -670,9 +724,9 @@ function closeDrawer() {
 }
 
 function _drawerContent() {
+  const myCollections = getUserCollections(CURRENT_USER.id);
   return `
   <div style="padding:20px;flex:1;overflow-y:auto;">
-    <!-- Header -->
     <div style="display:flex;align-items:center;justify-content:space-between;
                 margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);">
       <span class="caption">NOVO PIN</span>
@@ -682,7 +736,6 @@ function _drawerContent() {
               aria-label="Fechar">×</button>
     </div>
 
-    <!-- Image upload -->
     <div class="field">
       <label class="field-label">Imagem *</label>
       <div id="upload-area"
@@ -703,30 +756,47 @@ function _drawerContent() {
       </div>
     </div>
 
-    <!-- URL -->
     <div class="field">
       <label class="field-label">URL de origem</label>
       <input type="url" id="d-url" placeholder="https://...">
     </div>
 
-    <!-- Title -->
     <div class="field">
       <label class="field-label">Título *</label>
       <input type="text" id="d-title" placeholder="NOME DA REFERÊNCIA"
              style="text-transform:uppercase;">
     </div>
 
-    <!-- Category -->
+    <!-- Collection: free-text input with suggestions from user's existing collections -->
     <div class="field">
-      <label class="field-label">Categoria *</label>
-      <select id="d-cat">
-        ${CATEGORIES.filter(c => c !== 'TODOS').map(c =>
-          `<option value="${c}">${c}</option>`
-        ).join('')}
-      </select>
+      <label class="field-label">Coleção *</label>
+      <div style="position:relative;">
+        <input type="text" id="d-collection"
+               placeholder="nome da coleção"
+               autocomplete="off"
+               oninput="_showCollectionDD(this.value)"
+               onfocus="_showCollectionDD(this.value)">
+        <div id="collection-dd"
+             style="display:none;position:absolute;top:100%;left:0;right:0;
+                    background:#222;border:1px solid var(--border);z-index:5;
+                    max-height:160px;overflow-y:auto;">
+          ${myCollections.map(col => `
+            <div onclick="_selectCollection(${JSON.stringify(col)})"
+                 style="padding:8px 12px;cursor:pointer;font-size:11px;color:var(--text);"
+                 onmouseover="this.style.background='#333'"
+                 onmouseout="this.style.background=''">
+              ${col}
+            </div>`).join('')}
+          ${myCollections.length
+            ? `<div style="padding:6px 12px;border-top:1px solid var(--border);
+                           font-size:9px;color:var(--text-muted);font-weight:700;letter-spacing:.08em;">
+                 OU DIGITE UMA NOVA COLEÇÃO
+               </div>`
+            : ''}
+        </div>
+      </div>
     </div>
 
-    <!-- Tags -->
     <div class="field">
       <label class="field-label">Tags</label>
       <input type="text" id="d-tags-input"
@@ -736,7 +806,6 @@ function _drawerContent() {
            style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>
     </div>
 
-    <!-- Mention -->
     <div class="field">
       <label class="field-label">Mencionar alguém</label>
       <div style="position:relative;">
@@ -751,7 +820,6 @@ function _drawerContent() {
            style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>
     </div>
 
-    <!-- Notes -->
     <div class="field">
       <label class="field-label">Notas</label>
       <textarea id="d-notes" rows="3"
@@ -759,10 +827,30 @@ function _drawerContent() {
     </div>
   </div>
 
-  <!-- Submit -->
   <div style="padding:16px 20px;border-top:1px solid var(--border);">
     <button class="btn-primary" onclick="submitPin()">PUBLICAR PIN</button>
   </div>`;
+}
+
+function _showCollectionDD(val) {
+  const dd   = document.getElementById('collection-dd');
+  const myC  = getUserCollections(CURRENT_USER.id);
+  const q    = val.toLowerCase();
+  const matches = q ? myC.filter(c => c.toLowerCase().includes(q)) : myC;
+  if (!matches.length) { dd.style.display = 'none'; return; }
+  dd.style.display = 'block';
+  dd.innerHTML = matches.map(col => `
+    <div onclick="_selectCollection(${JSON.stringify(col)})"
+         style="padding:8px 12px;cursor:pointer;font-size:11px;color:var(--text);"
+         onmouseover="this.style.background='#333'"
+         onmouseout="this.style.background=''">
+      ${col}
+    </div>`).join('');
+}
+
+function _selectCollection(col) {
+  document.getElementById('d-collection').value = col;
+  document.getElementById('collection-dd').style.display = 'none';
 }
 
 function _previewImage(input) {
@@ -841,23 +929,28 @@ function _refreshMentionsUI() {
 }
 
 function submitPin() {
-  const title = (document.getElementById('d-title').value || '').trim().toUpperCase();
-  const cat   = document.getElementById('d-cat').value;
+  const title      = (document.getElementById('d-title').value || '').trim().toUpperCase();
+  const collection = (document.getElementById('d-collection').value || '').trim();
   if (!title) {
     document.getElementById('d-title').style.borderColor = 'rgba(237,232,213,.6)';
     document.getElementById('d-title').focus();
     return;
   }
+  if (!collection) {
+    document.getElementById('d-collection').style.borderColor = 'rgba(237,232,213,.6)';
+    document.getElementById('d-collection').focus();
+    return;
+  }
   const newPin = {
-    id:       'p' + Date.now(),
+    id:         'p' + Date.now(),
     title,
-    category: cat,
-    tags:     [..._drawerTags],
-    author:   CURRENT_USER.id,
-    likes:    0,
-    aspect:   1.0,
-    url:      (document.getElementById('d-url').value || '').trim(),
-    notes:    (document.getElementById('d-notes').value || '').trim(),
+    collection,
+    tags:       [..._drawerTags],
+    author:     CURRENT_USER.id,
+    likes:      0,
+    aspect:     1.0,
+    url:        (document.getElementById('d-url').value || '').trim(),
+    notes:      (document.getElementById('d-notes').value || '').trim(),
   };
   PINS.unshift(newPin);
   _mentionedUsers.forEach(toUserId => {
@@ -899,13 +992,10 @@ function _showDetailMentionDD(val, pinId) {
 function _sendDetailMention(toUserId, pinId, el) {
   NOTIFICATIONS.unshift({
     id: 'n'+Date.now(), type:'mention',
-    from: CURRENT_USER.id, pinId, read:false,
+    from: CURRENT_USER.id, to: toUserId, pinId, read:false,
   });
   document.getElementById('detail-mention-input').value = '';
   document.getElementById('detail-mention-dd').style.display = 'none';
-  // Brief visual feedback
-  const btn = el.closest('[id$="-dd"]');
-  if (btn) btn.style.display = 'none';
 }
 
 // ── INTERACTIVITY ────────────────────────────────────────────
