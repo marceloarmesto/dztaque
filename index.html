@@ -334,9 +334,103 @@ function renderPinCard(pin) {
   </div>`;
 }
 
-// Placeholders for screen functions — filled in Tasks 4-7
-function renderLogin()         { return '<p style="padding:48px;color:var(--text-muted)">TODO: login</p>'; }
-function renderFeed()          { return '<p style="padding:48px;color:var(--text-muted)">TODO: feed</p>'; }
+// ── FEED FILTERS & HELPERS ──────────────────────────────────
+function filterCategory(cat) {
+  STATE.feedCategory = cat;
+  STATE.searchQuery = '';
+  document.getElementById('app').innerHTML = renderFeed();
+}
+
+function onSearchInput(query) {
+  STATE.searchQuery = query;
+  const grid = document.getElementById('masonry-grid');
+  if (grid) grid.innerHTML = renderMasonryGrid(getDisplayPins());
+}
+
+function getDisplayPins() {
+  let pins = STATE.feedCategory === 'TODOS'
+    ? PINS
+    : PINS.filter(p => p.category === STATE.feedCategory);
+  if (STATE.searchQuery.trim()) {
+    const q = STATE.searchQuery.toLowerCase();
+    pins = pins.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.tags.some(t => t.includes(q)) ||
+      p.category.toLowerCase().includes(q)
+    );
+  }
+  return pins;
+}
+
+function renderMasonryGrid(pins) {
+  const cols = [[], [], []];
+  pins.forEach((pin, i) => cols[i % 3].push(pin));
+  return `
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+    ${cols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
+  </div>`;
+}
+
+function openPin(pinId) {
+  STATE.feedScrollY = window.scrollY;
+  navigateTo('pin', { pinId });
+}
+
+// ── LOGIN SCREEN ─────────────────────────────────────────────
+function renderLogin() {
+  return `
+  <div style="min-height:100vh;display:flex;flex-direction:column;
+              align-items:center;justify-content:center;padding:48px;
+              text-align:center;position:relative;overflow:hidden;">
+    <!-- wordmark-repeat texture -->
+    <div aria-hidden="true"
+         style="position:absolute;inset:0;overflow:hidden;opacity:.035;
+                font-size:10px;font-weight:700;letter-spacing:2px;
+                text-transform:uppercase;color:var(--text);
+                display:flex;flex-wrap:wrap;align-content:flex-start;
+                gap:0;pointer-events:none;user-select:none;line-height:2;">
+      ${'DZTAQUE&nbsp;'.repeat(500)}
+    </div>
+    <div style="position:relative;z-index:1;max-width:380px;width:100%;">
+      <div class="display-lg" style="margin-bottom:14px;">DZTAQUE</div>
+      <p class="subheading" style="color:var(--text-muted);margin-bottom:56px;">
+        Referências que robô não tem
+      </p>
+      <button class="btn-ghost"
+              style="width:100%;padding:14px 20px;font-size:10px;gap:10px;"
+              onclick="navigateTo('feed')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        ENTRAR COM GOOGLE @DZESTUDIO.COM.BR
+      </button>
+      <p class="caption" style="color:var(--text-faint);margin-top:56px;">DZESTÚDIO</p>
+    </div>
+  </div>`;
+}
+
+// ── FEED SCREEN ──────────────────────────────────────────────
+function renderFeed() {
+  const pins = getDisplayPins();
+  return `
+  ${renderNavBar()}
+  ${renderCategoryTabs()}
+  <div style="padding:12px 20px;" id="feed-area">
+    <div id="masonry-grid">
+      ${renderMasonryGrid(pins)}
+    </div>
+    ${pins.length === 0
+      ? `<p class="caption" style="text-align:center;color:var(--text-faint);padding:64px;">
+           NENHUMA REFERÊNCIA ENCONTRADA
+         </p>`
+      : ''}
+  </div>`;
+}
+
+// Placeholders for screen functions — filled in Tasks 5-7
 function renderPinDetail()     { return '<p style="padding:48px;color:var(--text-muted)">TODO: pin detail</p>'; }
 function renderProfile()       { return '<p style="padding:48px;color:var(--text-muted)">TODO: profile</p>'; }
 function renderNotifications() { return '<p style="padding:48px;color:var(--text-muted)">TODO: notifications</p>'; }
