@@ -430,9 +430,111 @@ function renderFeed() {
   </div>`;
 }
 
-// Placeholders for screen functions — filled in Tasks 5-7
-function renderProfile()       { return '<p style="padding:48px;color:var(--text-muted)">TODO: profile</p>'; }
-function renderNotifications() { return '<p style="padding:48px;color:var(--text-muted)">TODO: notifications</p>'; }
+// ── PROFILE SCREEN ──────────────────────────────────────────
+function renderProfile() {
+  const myPins = PINS.filter(p => p.author === CURRENT_USER.id);
+  const saved  = PINS.filter(p => STATE.savedPins.has(p.id));
+  const pins   = STATE.profileTab === 'mine' ? myPins : saved;
+  const cols   = [[], [], []];
+  pins.forEach((p, i) => cols[i % 3].push(p));
+
+  return `
+  ${renderNavBar()}
+  <div style="padding:32px 20px 0;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+      ${avatarHTML(CURRENT_USER.id, 56)}
+      <div style="flex:1;">
+        <p style="font-size:20px;font-weight:700;color:var(--text);">${CURRENT_USER.name}</p>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:2px;">@${CURRENT_USER.handle}</p>
+      </div>
+      <div style="display:flex;gap:28px;text-align:center;">
+        <div>
+          <p style="font-size:20px;font-weight:700;">${myPins.length}</p>
+          <p class="caption" style="color:var(--text-muted);">PINS</p>
+        </div>
+        <div>
+          <p style="font-size:20px;font-weight:700;">${STATE.savedPins.size}</p>
+          <p class="caption" style="color:var(--text-muted);">SALVOS</p>
+        </div>
+        <div>
+          <p style="font-size:20px;font-weight:700;">${myPins.reduce((acc,p) => acc+p.likes,0)}</p>
+          <p class="caption" style="color:var(--text-muted);">CURTIDAS</p>
+        </div>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div style="display:flex;">
+      ${[['mine','MEUS PINS'],['saved','SALVOS']].map(([tab, label]) => {
+        const active = STATE.profileTab === tab;
+        return `<button onclick="switchProfileTab('${tab}')"
+          style="background:none;border:none;
+                 border-bottom:${active?'2px solid var(--text)':'2px solid transparent'};
+                 color:${active?'var(--text)':'var(--text-muted)'};
+                 font-family:var(--font);font-size:9px;font-weight:700;
+                 letter-spacing:1.2px;text-transform:uppercase;
+                 padding:10px 14px;cursor:pointer;margin-bottom:-1px;">${label}</button>`;
+      }).join('')}
+    </div>
+  </div>
+  <div style="padding:12px 20px;">
+    ${pins.length
+      ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+           ${cols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
+         </div>`
+      : `<p class="caption" style="color:var(--text-faint);padding:48px;text-align:center;">
+           ${STATE.profileTab === 'mine' ? 'NENHUM PIN PUBLICADO' : 'NENHUM PIN SALVO'}
+         </p>`
+    }
+  </div>`;
+}
+
+function switchProfileTab(tab) {
+  STATE.profileTab = tab;
+  document.getElementById('app').innerHTML = renderProfile();
+}
+
+// ── NOTIFICATIONS SCREEN ────────────────────────────────────
+function renderNotifications() {
+  const labels = {
+    mention: 'mencionou você em',
+    like:    'curtiu seu pin',
+    save:    'salvou seu pin',
+  };
+  return `
+  ${renderNavBar()}
+  <div style="max-width:680px;margin:0 auto;padding:32px 20px;">
+    <h1 class="display-sm" style="margin-bottom:28px;">NOTIFICAÇÕES</h1>
+    ${NOTIFICATIONS.length === 0
+      ? `<p class="caption" style="color:var(--text-faint);">NENHUMA NOTIFICAÇÃO</p>`
+      : NOTIFICATIONS.map(n => {
+          const from = getUser(n.from);
+          const pin  = getPin(n.pinId);
+          return `
+          <div onclick="${pin ? `navigateTo('pin',{pinId:'${n.pinId}'})` : ''}"
+               style="display:flex;align-items:center;gap:12px;
+                      padding:14px ${n.read ? '0' : '14px'};
+                      margin-left:${n.read ? '0' : '-2px'};
+                      border-left:${n.read ? 'none' : '2px solid var(--text)'};
+                      border-bottom:1px solid var(--border);
+                      cursor:${pin ? 'pointer' : 'default'};
+                      transition:background .15s;"
+               onmouseover="this.style.background='rgba(237,232,213,.03)'"
+               onmouseout="this.style.background=''">
+            ${avatarHTML(n.from, 28)}
+            <p style="flex:1;font-size:12px;line-height:1.5;">
+              <strong style="color:var(--text);font-weight:700;">@${from.handle}</strong>
+              <span style="color:var(--text-muted);"> ${labels[n.type]} </span>
+              ${pin ? `<strong style="color:var(--text);font-weight:700;">${pin.title}</strong>` : ''}
+            </p>
+            ${!n.read
+              ? `<span style="width:6px;height:6px;border-radius:50%;
+                              background:var(--text);flex-shrink:0;"></span>`
+              : ''}
+          </div>`;
+        }).join('')
+    }
+  </div>`;
+}
 
 function renderPinDetail() {
   const pin = getPin(STATE.pinId);
