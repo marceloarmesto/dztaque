@@ -908,6 +908,21 @@ function _sendDetailMention(toUserId, pinId, el) {
   if (btn) btn.style.display = 'none';
 }
 
+// ── INTERACTIVITY ────────────────────────────────────────────
+function toggleLike(pinId) {
+  if (STATE.likedPins.has(pinId)) STATE.likedPins.delete(pinId);
+  else STATE.likedPins.add(pinId);
+  document.getElementById('app').innerHTML =
+    STATE.screen === 'pin' ? renderPinDetail() : renderFeed();
+}
+
+function toggleSave(pinId) {
+  if (STATE.savedPins.has(pinId)) STATE.savedPins.delete(pinId);
+  else STATE.savedPins.add(pinId);
+  document.getElementById('app').innerHTML =
+    STATE.screen === 'pin' ? renderPinDetail() : renderFeed();
+}
+
 // ── BOOT ─────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', () => {
   history.replaceState({ screen:'login' }, '', '#login');
