@@ -19,10 +19,12 @@ CREATE POLICY "profiles_update"
   ON profiles FOR UPDATE USING (auth.uid() = id);
 
 -- trigger: cria profile automaticamente no primeiro login Google ou email/senha
+-- SET search_path = public garante que o GoTrue (que roda com search_path
+-- restrito) ache a tabela; profiles é schema-qualificado por segurança extra.
 CREATE OR REPLACE FUNCTION handle_new_user()
-RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 BEGIN
-  INSERT INTO profiles (id, name, handle, avatar_url)
+  INSERT INTO public.profiles (id, name, handle, avatar_url)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
