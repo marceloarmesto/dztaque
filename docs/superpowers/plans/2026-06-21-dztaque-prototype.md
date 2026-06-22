@@ -1,0 +1,1261 @@
+# DZtaque Prototype Implementation Plan
+
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+
+**Goal:** Build a single `index.html` prototype of DZtaque — plataforma interna de referências criativas — navegável no browser, sem dependências externas e sem backend.
+
+**Architecture:** Arquivo HTML único com CSS custom properties no `<style>`, dados mock em array JS no `<script>`, e funções de render que reescrevem `#app` innerHTML ao trocar de tela. Drawer de criar pin vive fora de `#app` (sempre no DOM) e é mostrado/escondido via CSS transform. Navegação usa `history.pushState` para permitir `history.back()` com restauração de scroll.
+
+**Tech Stack:** HTML5 · CSS3 (custom properties, CSS columns para masonry) · Vanilla JavaScript ES6+. Zero dependências externas. Zero frameworks.
+
+## Global Constraints
+
+- Arquivo único: `index.html` — sem arquivos CSS, JS ou de asset separados
+- Background shell: `#111111` — nunca preto puro `#000`
+- Texto primário: `#EDE8D5` — nunca branco puro
+- `border-radius: 0` em todos os elementos — exceto avatares (circulares)
+- Zero `box-shadow` em qualquer elemento
+- Tipografia: `'Helvetica Neue', Helvetica, Arial, sans-serif`
+- Peso display: 900 (Black), peso corpo: 400
+- Headlines e labels sempre `text-transform: uppercase`
+- Fotos: `filter: grayscale(1) contrast(1.15)` — sem exceção
+- Sem dependências CDN, sem Google Fonts externas
+
+---
+
+### Task 1: HTML shell + CSS design system
+
+**Files:**
+- Create: `index.html`
+
+**Interfaces:**
+- Produces: arquivo abrível no browser com fundo `#111111`, variáveis CSS do design system, estilos base de tipografia, botões, inputs, avatares e tag pills
+
+- [ ] **Step 1: Criar index.html com shell completo**
+
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DZTAQUE</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:           #111111;
+  --surface:      #161616;
+  --surface-hover:#1c1c1c;
+  --text:         #EDE8D5;
+  --text-muted:   rgba(237,232,213,0.4);
+  --text-faint:   rgba(237,232,213,0.15);
+  --border:       rgba(237,232,213,0.12);
+  --border-strong:rgba(237,232,213,0.25);
+  --accent:       #0A3D26;
+  --font:         'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { min-height: 100vh; }
+
+/* ── Typography ── */
+.display-lg  { font-size: clamp(32px,7vw,80px);  font-weight:900; line-height:0.92; letter-spacing:-2.4px; text-transform:uppercase; }
+.display-md  { font-size: clamp(24px,5vw,48px);  font-weight:900; line-height:0.95; letter-spacing:-1.44px; text-transform:uppercase; }
+.display-sm  { font-size: 32px; font-weight:900; line-height:1.0;  letter-spacing:-0.96px; text-transform:uppercase; }
+.subheading  { font-size: 20px; font-weight:400; line-height:1.2; }
+.body-sm     { font-size: 12px; font-weight:400; line-height:1.5; }
+.caption     { font-size: 10px; font-weight:700; line-height:1.4;  letter-spacing:1.2px; text-transform:uppercase; }
+.wordmark    { font-size: 24px; font-weight:900; letter-spacing:-0.48px; text-transform:uppercase; }
+
+/* ── Buttons ── */
+.btn-ghost {
+  display:inline-flex; align-items:center; justify-content:center;
+  border:1px solid var(--border-strong); background:transparent;
+  color:var(--text); font-family:var(--font); font-size:9px;
+  font-weight:700; letter-spacing:1.2px; text-transform:uppercase;
+  padding:7px 14px; cursor:pointer; border-radius:0;
+  transition:background 0.15s;
+}
+.btn-ghost:hover { background:rgba(237,232,213,0.07); }
+
+.btn-primary {
+  display:flex; align-items:center; justify-content:center;
+  border:none; background:var(--text); color:#111111;
+  font-family:var(--font); font-size:10px; font-weight:700;
+  letter-spacing:1.2px; text-transform:uppercase;
+  padding:12px; cursor:pointer; border-radius:0; width:100%;
+}
+.btn-primary:hover { opacity:0.9; }
+
+/* ── Form elements ── */
+input, select, textarea {
+  width:100%; background:rgba(237,232,213,0.05);
+  border:1px solid var(--border); color:var(--text);
+  font-family:var(--font); font-size:12px; padding:8px 10px;
+  border-radius:0; outline:none; -webkit-appearance:none;
+}
+input:focus, select:focus, textarea:focus { border-color:var(--border-strong); }
+input::placeholder, textarea::placeholder { color:var(--text-muted); }
+select option { background:#222; color:var(--text); }
+label.field-label {
+  display:block; font-size:9px; font-weight:700;
+  letter-spacing:1.2px; text-transform:uppercase;
+  color:var(--text-muted); margin-bottom:5px;
+}
+.field { margin-bottom:14px; }
+
+/* ── Avatar ── */
+.avatar {
+  border-radius:50%; background:rgba(237,232,213,0.12);
+  display:inline-flex; align-items:center; justify-content:center;
+  font-weight:700; color:var(--text); flex-shrink:0;
+  border:1px solid rgba(237,232,213,0.2);
+}
+
+/* ── Tag pill ── */
+.tag-pill {
+  display:inline-flex; align-items:center; gap:4px;
+  border:0.5px solid rgba(237,232,213,0.25); padding:2px 8px;
+  font-size:9px; font-weight:700; letter-spacing:0.8px;
+  text-transform:uppercase; color:var(--text-muted); cursor:default;
+}
+.tag-pill .remove { cursor:pointer; font-size:12px; line-height:1; }
+.tag-pill .remove:hover { color:var(--text); }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width:4px; height:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<!-- Drawer: always in DOM, outside #app -->
+<div id="drawer-overlay"
+     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;"
+     onclick="closeDrawer()"></div>
+<div id="drawer"
+     style="position:fixed;top:0;right:0;width:400px;height:100vh;
+            background:var(--surface);border-left:1px solid var(--border);
+            z-index:101;transform:translateX(100%);transition:transform 0.25s ease;
+            overflow-y:auto;display:flex;flex-direction:column;"></div>
+<script>
+// Tasks 2-8 fill this script block
+</script>
+</body>
+</html>
+```
+
+- [ ] **Step 2: Verificar no browser**
+
+Abrir `index.html` no browser. Verificar:
+- Fundo preto `#111111` visível
+- Nenhum erro no console (F12)
+- Página em branco (esperado — `#app` está vazio)
+
+- [ ] **Step 3: Commit**
+
+```bash
+git init
+git add index.html
+git commit -m "feat: html shell + css design system"
+```
+
+---
+
+### Task 2: Mock data + navigation engine
+
+**Files:**
+- Modify: `index.html` — substituir o `// Tasks 2-8 fill this block` pelo código abaixo
+
+**Interfaces:**
+- Produces: `USERS`, `PINS`, `NOTIFICATIONS`, `CATEGORIES`, `CURRENT_USER`, `STATE`, `navigateTo(screen, params)`, `goBack()`, `render()`
+
+- [ ] **Step 1: Adicionar dados mock e engine de navegação no `<script>`**
+
+Substituir `// Tasks 2-8 fill this block` por:
+
+```javascript
+// ── MOCK DATA ────────────────────────────────────────────────
+const USERS = [
+  { id:'u1', name:'Lucas Andrade',  handle:'lucas', initials:'LA' },
+  { id:'u2', name:'Ana Moraes',     handle:'ana',   initials:'AM' },
+  { id:'u3', name:'Beto Ramos',     handle:'beto',  initials:'BR' },
+  { id:'u4', name:'Carol Assis',    handle:'carol', initials:'CA' },
+  { id:'u5', name:'Feli Costa',     handle:'feli',  initials:'FC' },
+  { id:'u6', name:'Mari Rocha',     handle:'mari',  initials:'MR' },
+  { id:'u7', name:'Duda Lima',      handle:'duda',  initials:'DL' },
+  { id:'u8', name:'Tati Nunes',     handle:'tati',  initials:'TN' },
+];
+
+const CURRENT_USER = USERS[0];
+
+const CATEGORIES = ['TODOS','MOTION','IDENTIDADE','COPY','UI/UX','CAMPANHA','TIPOGRAFIA','OOH'];
+
+const PINS = [
+  { id:'p1',  title:'NIKE — FEEL IT',      category:'MOTION',     tags:['sport','emotion'],         author:'u1', likes:12, aspect:1.4,  url:'https://nike.com' },
+  { id:'p2',  title:'COSMOS REBRAND',      category:'IDENTIDADE', tags:['minimal','identity'],      author:'u3', likes:28, aspect:0.8,  url:'https://cosmos.so' },
+  { id:'p3',  title:'APPLE PRIVACY',       category:'CAMPANHA',   tags:['tech','manifesto'],        author:'u4', likes:41, aspect:1.6,  url:'https://apple.com' },
+  { id:'p4',  title:'NEUE HAAS IN USE',    category:'TIPOGRAFIA', tags:['helvetica','type'],        author:'u5', likes:7,  aspect:1.0,  url:'' },
+  { id:'p5',  title:'LINEAR DESIGN SYS',   category:'UI/UX',      tags:['ui','system','dark'],      author:'u6', likes:19, aspect:1.2,  url:'https://linear.app' },
+  { id:'p6',  title:'BK WHOPPER OOH',      category:'OOH',        tags:['food','outdoor'],          author:'u2', likes:5,  aspect:0.6,  url:'' },
+  { id:'p7',  title:'SPOTIFY WRAPPED',     category:'CAMPANHA',   tags:['data','music','social'],   author:'u7', likes:33, aspect:1.8,  url:'https://spotify.com' },
+  { id:'p8',  title:'INTER TYPEFACE',      category:'TIPOGRAFIA', tags:['open','grotesque'],        author:'u1', likes:15, aspect:0.9,  url:'' },
+  { id:'p9',  title:'PORTO ALEGRE OOH',    category:'OOH',        tags:['brasil','urban'],          author:'u3', likes:8,  aspect:0.7,  url:'' },
+  { id:'p10', title:'FIGMA CONFIG 24',     category:'UI/UX',      tags:['ux','conference'],         author:'u4', likes:22, aspect:1.3,  url:'https://figma.com' },
+  { id:'p11', title:'CHANEL N°5 FILM',     category:'MOTION',     tags:['luxury','cinematic'],      author:'u8', likes:47, aspect:1.7,  url:'' },
+  { id:'p12', title:'PENTAGRAM WORK',      category:'IDENTIDADE', tags:['branding','studio'],       author:'u2', likes:31, aspect:1.1,  url:'https://pentagram.com' },
+  { id:'p13', title:'GUGGENHEIM TYPE',     category:'TIPOGRAFIA', tags:['museum','display'],        author:'u5', likes:14, aspect:0.85, url:'' },
+  { id:'p14', title:'OATLY — WEIRD',       category:'COPY',       tags:['voice','humor','brand'],   author:'u6', likes:38, aspect:1.5,  url:'https://oatly.com' },
+  { id:'p15', title:'TEENAGE DREAMS',      category:'CAMPANHA',   tags:['fashion','youth'],         author:'u7', likes:11, aspect:1.0,  url:'' },
+  { id:'p16', title:'FRAMER MOTION',       category:'MOTION',     tags:['web','interaction'],       author:'u3', likes:26, aspect:1.35, url:'https://framer.com' },
+  { id:'p17', title:'BRUTALIST WEB',       category:'UI/UX',      tags:['brutalist','bold'],        author:'u1', likes:9,  aspect:1.6,  url:'' },
+  { id:'p18', title:'DOVE REAL BEAUTY',    category:'COPY',       tags:['manifesto','brand'],       author:'u4', likes:44, aspect:0.75, url:'' },
+  { id:'p19', title:'PRADA BILLBOARD',     category:'OOH',        tags:['luxury','fashion'],        author:'u8', likes:17, aspect:1.2,  url:'' },
+  { id:'p20', title:'VEJA COLLAB',         category:'IDENTIDADE', tags:['collab','streetwear'],     author:'u2', likes:23, aspect:1.0,  url:'https://veja.fr' },
+];
+
+const NOTIFICATIONS = [
+  { id:'n1', type:'mention', from:'u3', pinId:'p5', read:false },
+  { id:'n2', type:'like',    from:'u4', pinId:'p1', read:false },
+  { id:'n3', type:'save',    from:'u2', pinId:'p1', read:true  },
+  { id:'n4', type:'mention', from:'u6', pinId:'p8', read:true  },
+];
+
+// ── STATE ────────────────────────────────────────────────────
+const STATE = {
+  screen:       'login',
+  pinId:        null,
+  feedCategory: 'TODOS',
+  feedScrollY:  0,
+  likedPins:    new Set(),
+  savedPins:    new Set(['p3','p5']),
+  profileTab:   'mine',
+  searchQuery:  '',
+};
+
+// ── NAVIGATION ───────────────────────────────────────────────
+function navigateTo(screen, params = {}) {
+  if (STATE.screen === 'feed') STATE.feedScrollY = window.scrollY;
+  Object.assign(STATE, { screen, ...params });
+  render();
+  window.scrollTo(0, 0);
+  history.pushState({ screen, ...params }, '', '#' + screen);
+}
+
+function goBack() {
+  const y = STATE.feedScrollY;
+  history.back();
+  // popstate handler restores scroll after render
+}
+
+window.addEventListener('popstate', e => {
+  if (!e.state) return;
+  Object.assign(STATE, e.state);
+  render();
+  if (e.state.screen === 'feed') {
+    requestAnimationFrame(() => window.scrollTo(0, STATE.feedScrollY));
+  }
+});
+
+function render() {
+  const app = document.getElementById('app');
+  if (STATE.screen === 'login')   app.innerHTML = renderLogin();
+  else if (STATE.screen === 'feed')    app.innerHTML = renderFeed();
+  else if (STATE.screen === 'pin')     app.innerHTML = renderPinDetail();
+  else if (STATE.screen === 'profile') app.innerHTML = renderProfile();
+  else if (STATE.screen === 'notifs')  app.innerHTML = renderNotifications();
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function getUser(id) { return USERS.find(u => u.id === id); }
+function getPin(id)  { return PINS.find(p => p.id === id); }
+
+function avatarHTML(userId, size = 20) {
+  const u = getUser(userId);
+  if (!u) return '';
+  return `<span class="avatar" style="width:${size}px;height:${size}px;font-size:${Math.floor(size*0.38)}px;">${u.initials}</span>`;
+}
+
+// Placeholders for screen functions — filled in Tasks 3-7
+function renderLogin()         { return '<p style="padding:48px;color:var(--text-muted)">TODO: login</p>'; }
+function renderFeed()          { return '<p style="padding:48px;color:var(--text-muted)">TODO: feed</p>'; }
+function renderPinDetail()     { return '<p style="padding:48px;color:var(--text-muted)">TODO: pin detail</p>'; }
+function renderProfile()       { return '<p style="padding:48px;color:var(--text-muted)">TODO: profile</p>'; }
+function renderNotifications() { return '<p style="padding:48px;color:var(--text-muted)">TODO: notifications</p>'; }
+
+// ── BOOT ─────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  history.replaceState({ screen:'login' }, '', '#login');
+  render();
+});
+```
+
+- [ ] **Step 2: Verificar no browser**
+
+Abrir `index.html`. Verificar:
+- Página mostra "TODO: login" em texto muted
+- Console sem erros
+- Executar no console: `navigateTo('feed')` → texto muda para "TODO: feed"
+- Executar: `history.back()` → volta para "TODO: login"
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add index.html
+git commit -m "feat: mock data + navigation engine"
+```
+
+---
+
+### Task 3: Shared components — nav bar, category tabs, pin card
+
+**Files:**
+- Modify: `index.html` — adicionar funções antes do bloco `// ── BOOT`
+
+**Interfaces:**
+- Consumes: `USERS`, `CATEGORIES`, `STATE`, `NOTIFICATIONS`, `avatarHTML(userId, size)`, `navigateTo()`, `openDrawer()`, `toggleLike(pinId)`, `toggleSave(pinId)`, `openPin(pinId)`
+- Produces: `renderNavBar()` → string HTML, `renderCategoryTabs()` → string HTML, `renderPinCard(pin)` → string HTML
+
+- [ ] **Step 1: Adicionar renderNavBar() antes do bloco `// ── BOOT`**
+
+```javascript
+// ── NAV BAR ──────────────────────────────────────────────────
+function renderNavBar() {
+  const unread = NOTIFICATIONS.filter(n => !n.read).length;
+  return `
+  <nav style="position:sticky;top:0;z-index:10;background:var(--bg);
+              display:flex;align-items:center;justify-content:space-between;
+              padding:10px 20px;border-bottom:1px solid var(--border);">
+    <span class="wordmark" style="cursor:pointer;" onclick="navigateTo('feed')">DZTAQUE</span>
+    <div style="flex:1;max-width:340px;margin:0 24px;display:flex;align-items:center;
+                gap:8px;background:rgba(237,232,213,.07);border:1px solid var(--border);
+                padding:6px 12px;">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2.5" style="opacity:.35;flex-shrink:0;">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="search-input" placeholder="buscar referências..."
+             style="border:none;background:transparent;padding:0;width:100%;font-size:11px;"
+             oninput="onSearchInput(this.value)">
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="btn-ghost" style="position:relative;padding:6px 8px;"
+              onclick="navigateTo('notifs')" aria-label="Notificações" title="Notificações">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+          <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        ${unread > 0
+          ? `<span style="position:absolute;top:3px;right:3px;width:7px;height:7px;
+                          background:var(--text);border-radius:50%;"></span>`
+          : ''}
+      </button>
+      <button class="btn-ghost" onclick="openDrawer()">+ PIN</button>
+      <span onclick="navigateTo('profile')" title="${CURRENT_USER.name}"
+            style="cursor:pointer;">${avatarHTML(CURRENT_USER.id, 28)}</span>
+    </div>
+  </nav>`;
+}
+```
+
+- [ ] **Step 2: Adicionar renderCategoryTabs() logo após renderNavBar()**
+
+```javascript
+// ── CATEGORY TABS ────────────────────────────────────────────
+function renderCategoryTabs() {
+  return `
+  <div style="display:flex;align-items:center;padding:0 20px;
+              border-bottom:1px solid var(--border);overflow-x:auto;
+              scrollbar-width:none;">
+    ${CATEGORIES.map(cat => {
+      const active = STATE.feedCategory === cat;
+      return `<button onclick="filterCategory('${cat}')"
+        style="background:none;border:none;
+               border-bottom:${active ? '2px solid var(--text)' : '2px solid transparent'};
+               color:${active ? 'var(--text)' : 'var(--text-muted)'};
+               font-family:var(--font);font-size:9px;font-weight:700;
+               letter-spacing:1.2px;text-transform:uppercase;
+               padding:9px 14px;cursor:pointer;white-space:nowrap;
+               margin-bottom:-1px;transition:color 0.15s;">${cat}</button>`;
+    }).join('')}
+  </div>`;
+}
+```
+
+- [ ] **Step 3: Adicionar renderPinCard(pin) logo após renderCategoryTabs()**
+
+```javascript
+// ── PIN CARD ─────────────────────────────────────────────────
+function renderPinCard(pin) {
+  const imgH   = Math.round(180 * pin.aspect);
+  const liked  = STATE.likedPins.has(pin.id);
+  const saved  = STATE.savedPins.has(pin.id);
+  const author = getUser(pin.author);
+  return `
+  <div style="border:0.5px solid var(--border);margin-bottom:6px;
+              break-inside:avoid;cursor:pointer;transition:border-color .15s;"
+       onclick="openPin('${pin.id}')"
+       onmouseover="this.style.borderColor='var(--border-strong)'"
+       onmouseout="this.style.borderColor='var(--border)'">
+    <div style="position:relative;background:var(--surface-hover);
+                height:${imgH}px;display:flex;align-items:center;
+                justify-content:center;overflow:hidden;
+                filter:grayscale(1) contrast(1.15);">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+           stroke="rgba(237,232,213,.1)" stroke-width="1">
+        <rect x="3" y="3" width="18" height="18"/>
+        <circle cx="9" cy="9" r="2"/>
+        <path d="m21 15-5-5L5 21"/>
+      </svg>
+      <span style="position:absolute;top:6px;right:6px;font-size:7px;font-weight:700;
+                   letter-spacing:.1em;text-transform:uppercase;
+                   background:rgba(0,0,0,.55);color:var(--text);
+                   padding:2px 5px;">${pin.category}</span>
+    </div>
+    <div style="background:var(--surface);padding:7px 8px;">
+      <p style="font-size:10px;font-weight:700;color:var(--text);margin:0 0 5px;
+                text-transform:uppercase;letter-spacing:.02em;
+                white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+        ${pin.title}
+      </p>
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="display:flex;align-items:center;gap:5px;">
+          ${avatarHTML(pin.author, 16)}
+          <span style="font-size:8px;color:var(--text-muted);">@${author.handle}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;"
+             onclick="event.stopPropagation()">
+          <span style="font-size:8px;color:var(--text-muted);">
+            ${pin.likes + (liked ? 1 : 0)}
+          </span>
+          <button onclick="toggleLike('${pin.id}')"
+                  style="background:none;border:none;cursor:pointer;padding:0;
+                         color:${liked ? 'var(--text)' : 'var(--text-muted)'};
+                         font-size:15px;line-height:1;" aria-label="Curtir">
+            ${liked ? '♥' : '♡'}
+          </button>
+          <button onclick="toggleSave('${pin.id}')"
+                  style="background:none;border:none;cursor:pointer;padding:0;
+                         color:${saved ? 'var(--text)' : 'var(--text-muted)'};
+                         font-size:14px;line-height:1;" aria-label="Salvar">
+            ${saved ? '⊞' : '⊟'}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+```
+
+- [ ] **Step 4: Verificar no browser**
+
+Console: `document.body.insertAdjacentHTML('beforeend', renderPinCard(PINS[0]))`
+Verificar:
+- Card visível com fundo `#161616`, imagem placeholder cinza, badge de categoria, título uppercase, avatar, ícones de coração e bookmark
+- Nenhum erro no console
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add index.html
+git commit -m "feat: shared components - nav bar, category tabs, pin card"
+```
+
+---
+
+### Task 4: Login screen + Feed screen
+
+**Files:**
+- Modify: `index.html` — substituir as funções placeholder `renderLogin()` e `renderFeed()`
+
+**Interfaces:**
+- Consumes: `renderNavBar()`, `renderCategoryTabs()`, `renderPinCard(pin)`, `STATE`, `PINS`, `CATEGORIES`
+- Produces: `renderLogin()`, `renderFeed()`, `filterCategory(cat)`, `onSearchInput(query)`, `openPin(pinId)`
+
+- [ ] **Step 1: Substituir a função placeholder renderLogin()**
+
+```javascript
+function renderLogin() {
+  return `
+  <div style="min-height:100vh;display:flex;flex-direction:column;
+              align-items:center;justify-content:center;padding:48px;
+              text-align:center;position:relative;overflow:hidden;">
+    <!-- wordmark-repeat texture -->
+    <div aria-hidden="true"
+         style="position:absolute;inset:0;overflow:hidden;opacity:.035;
+                font-size:10px;font-weight:700;letter-spacing:2px;
+                text-transform:uppercase;color:var(--text);
+                display:flex;flex-wrap:wrap;align-content:flex-start;
+                gap:0;pointer-events:none;user-select:none;line-height:2;">
+      ${'DZTAQUE&nbsp;'.repeat(500)}
+    </div>
+    <div style="position:relative;z-index:1;max-width:380px;width:100%;">
+      <div class="display-lg" style="margin-bottom:14px;">DZTAQUE</div>
+      <p class="subheading" style="color:var(--text-muted);margin-bottom:56px;">
+        Referências que robô não tem
+      </p>
+      <button class="btn-ghost"
+              style="width:100%;padding:14px 20px;font-size:10px;gap:10px;"
+              onclick="navigateTo('feed')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+          <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+          <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+          <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+        </svg>
+        ENTRAR COM GOOGLE @DZESTUDIO.COM.BR
+      </button>
+      <p class="caption" style="color:var(--text-faint);margin-top:56px;">DZESTÚDIO</p>
+    </div>
+  </div>`;
+}
+```
+
+- [ ] **Step 2: Substituir a função placeholder renderFeed() e adicionar helpers de filtro**
+
+```javascript
+function filterCategory(cat) {
+  STATE.feedCategory = cat;
+  STATE.searchQuery = '';
+  document.getElementById('app').innerHTML = renderFeed();
+}
+
+function onSearchInput(query) {
+  STATE.searchQuery = query;
+  const grid = document.getElementById('masonry-grid');
+  if (grid) grid.innerHTML = renderMasonryGrid(getDisplayPins());
+}
+
+function getDisplayPins() {
+  let pins = STATE.feedCategory === 'TODOS'
+    ? PINS
+    : PINS.filter(p => p.category === STATE.feedCategory);
+  if (STATE.searchQuery.trim()) {
+    const q = STATE.searchQuery.toLowerCase();
+    pins = pins.filter(p =>
+      p.title.toLowerCase().includes(q) ||
+      p.tags.some(t => t.includes(q)) ||
+      p.category.toLowerCase().includes(q)
+    );
+  }
+  return pins;
+}
+
+function renderMasonryGrid(pins) {
+  const cols = [[], [], []];
+  pins.forEach((pin, i) => cols[i % 3].push(pin));
+  return `
+  <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+    ${cols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
+  </div>`;
+}
+
+function openPin(pinId) {
+  STATE.feedScrollY = window.scrollY;
+  navigateTo('pin', { pinId });
+}
+
+function renderFeed() {
+  const pins = getDisplayPins();
+  return `
+  ${renderNavBar()}
+  ${renderCategoryTabs()}
+  <div style="padding:12px 20px;" id="feed-area">
+    <div id="masonry-grid">
+      ${renderMasonryGrid(pins)}
+    </div>
+    ${pins.length === 0
+      ? `<p class="caption" style="text-align:center;color:var(--text-faint);padding:64px;">
+           NENHUMA REFERÊNCIA ENCONTRADA
+         </p>`
+      : ''}
+  </div>`;
+}
+```
+
+- [ ] **Step 3: Verificar no browser**
+
+Abrir `index.html`. Verificar:
+- Tela de login com wordmark "DZTAQUE", tagline, botão Google, textura de fundo sutil
+- Clicar em "ENTRAR COM GOOGLE" → feed aparece com grid 3 colunas de 20 cards
+- Clicar em "MOTION" na barra de categorias → grid filtra para 3 pins de motion
+- Clicar em "TODOS" → volta todos os 20 pins
+- Digitar "nike" no campo de busca → só o pin da Nike aparece
+- Limpar busca → todos os pins voltam
+- Clicar no wordmark "DZTAQUE" → permanece no feed (sem erro)
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add index.html
+git commit -m "feat: login screen + feed with masonry grid and filters"
+```
+
+---
+
+### Task 5: Create pin drawer
+
+**Files:**
+- Modify: `index.html` — adicionar funções do drawer antes do bloco `// ── BOOT`
+
+**Interfaces:**
+- Consumes: `USERS`, `CATEGORIES`, `CURRENT_USER`, `PINS`, `NOTIFICATIONS`, `avatarHTML()`, `navigateTo()`, `render()`
+- Produces: `openDrawer()`, `closeDrawer()`, `submitPin()`; efeito colateral: adiciona ao array `PINS` e `NOTIFICATIONS`
+
+- [ ] **Step 1: Adicionar estado local e funções do drawer**
+
+```javascript
+// ── DRAWER ───────────────────────────────────────────────────
+let _drawerTags     = [];
+let _mentionedUsers = [];
+
+function openDrawer() {
+  _drawerTags     = [];
+  _mentionedUsers = [];
+  const drawer = document.getElementById('drawer');
+  drawer.innerHTML = _drawerContent();
+  document.getElementById('drawer-overlay').style.display = 'block';
+  requestAnimationFrame(() => { drawer.style.transform = 'translateX(0)'; });
+}
+
+function closeDrawer() {
+  const drawer = document.getElementById('drawer');
+  drawer.style.transform = 'translateX(100%)';
+  setTimeout(() => {
+    document.getElementById('drawer-overlay').style.display = 'none';
+  }, 250);
+}
+
+function _drawerContent() {
+  return `
+  <div style="padding:20px;flex:1;overflow-y:auto;">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);">
+      <span class="caption">NOVO PIN</span>
+      <button onclick="closeDrawer()"
+              style="background:none;border:none;cursor:pointer;
+                     color:var(--text-muted);font-size:22px;line-height:1;padding:0;"
+              aria-label="Fechar">×</button>
+    </div>
+
+    <!-- Image upload -->
+    <div class="field">
+      <label class="field-label">Imagem *</label>
+      <div id="upload-area"
+           onclick="document.getElementById('file-input').click()"
+           style="border:1px dashed var(--border-strong);padding:24px;
+                  text-align:center;cursor:pointer;transition:border-color .15s;"
+           onmouseover="this.style.borderColor='var(--text)'"
+           onmouseout="this.style.borderColor='var(--border-strong)'">
+        <p class="caption" style="color:var(--text-muted);">ARRASTE OU CLIQUE PARA ENVIAR</p>
+        <p class="body-sm" style="color:var(--text-faint);margin-top:4px;">JPG · PNG · GIF · WebP</p>
+      </div>
+      <input id="file-input" type="file" accept="image/*"
+             style="display:none;" onchange="_previewImage(this)">
+      <div id="img-preview" style="margin-top:8px;display:none;">
+        <img id="preview-img"
+             style="width:100%;max-height:200px;object-fit:cover;display:block;
+                    filter:grayscale(1) contrast(1.15);">
+      </div>
+    </div>
+
+    <!-- URL -->
+    <div class="field">
+      <label class="field-label">URL de origem</label>
+      <input type="url" id="d-url" placeholder="https://...">
+    </div>
+
+    <!-- Title -->
+    <div class="field">
+      <label class="field-label">Título *</label>
+      <input type="text" id="d-title" placeholder="NOME DA REFERÊNCIA"
+             style="text-transform:uppercase;">
+    </div>
+
+    <!-- Category -->
+    <div class="field">
+      <label class="field-label">Categoria *</label>
+      <select id="d-cat">
+        ${CATEGORIES.filter(c => c !== 'TODOS').map(c =>
+          `<option value="${c}">${c}</option>`
+        ).join('')}
+      </select>
+    </div>
+
+    <!-- Tags -->
+    <div class="field">
+      <label class="field-label">Tags</label>
+      <input type="text" id="d-tags-input"
+             placeholder="digite e pressione Enter"
+             onkeydown="_addTagOnEnter(event)">
+      <div id="tags-container"
+           style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>
+    </div>
+
+    <!-- Mention -->
+    <div class="field">
+      <label class="field-label">Mencionar alguém</label>
+      <div style="position:relative;">
+        <input type="text" id="d-mention" placeholder="@nome"
+               oninput="_showMentionDD(this.value)">
+        <div id="mention-dd"
+             style="display:none;position:absolute;top:100%;left:0;right:0;
+                    background:#222;border:1px solid var(--border);z-index:5;
+                    max-height:140px;overflow-y:auto;"></div>
+      </div>
+      <div id="mentions-list"
+           style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;"></div>
+    </div>
+
+    <!-- Notes -->
+    <div class="field">
+      <label class="field-label">Notas</label>
+      <textarea id="d-notes" rows="3"
+                placeholder="contexto, por que essa referência é relevante..."></textarea>
+    </div>
+  </div>
+
+  <!-- Submit -->
+  <div style="padding:16px 20px;border-top:1px solid var(--border);">
+    <button class="btn-primary" onclick="submitPin()">PUBLICAR PIN</button>
+  </div>`;
+}
+
+function _previewImage(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('preview-img').src = e.target.result;
+    document.getElementById('img-preview').style.display = 'block';
+    document.getElementById('upload-area').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function _addTagOnEnter(e) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  const input = document.getElementById('d-tags-input');
+  const val   = input.value.trim().toLowerCase().replace(/\s+/g, '-');
+  if (!val || _drawerTags.includes(val)) { input.value = ''; return; }
+  _drawerTags.push(val);
+  input.value = '';
+  _refreshTagsUI();
+}
+
+function _removeTag(tag) {
+  _drawerTags = _drawerTags.filter(t => t !== tag);
+  _refreshTagsUI();
+}
+
+function _refreshTagsUI() {
+  document.getElementById('tags-container').innerHTML = _drawerTags
+    .map(t => `<span class="tag-pill">${t}<span class="remove" onclick="_removeTag('${t}')">×</span></span>`)
+    .join('');
+}
+
+function _showMentionDD(val) {
+  const dd = document.getElementById('mention-dd');
+  const q  = val.replace('@', '').toLowerCase();
+  if (!q) { dd.style.display = 'none'; return; }
+  const matches = USERS.filter(u =>
+    u.name.toLowerCase().includes(q) || u.handle.includes(q)
+  );
+  if (!matches.length) { dd.style.display = 'none'; return; }
+  dd.style.display = 'block';
+  dd.innerHTML = matches.map(u => `
+    <div onclick="_selectMention('${u.id}')"
+         style="padding:8px 12px;cursor:pointer;display:flex;
+                align-items:center;gap:8px;font-size:11px;"
+         onmouseover="this.style.background='#333'"
+         onmouseout="this.style.background=''">
+      ${avatarHTML(u.id, 18)}
+      <span>@${u.handle}</span>
+      <span style="color:var(--text-muted);font-size:10px;">${u.name}</span>
+    </div>`).join('');
+}
+
+function _selectMention(userId) {
+  if (_mentionedUsers.includes(userId)) return;
+  _mentionedUsers.push(userId);
+  document.getElementById('d-mention').value = '';
+  document.getElementById('mention-dd').style.display = 'none';
+  _refreshMentionsUI();
+}
+
+function _removeMention(userId) {
+  _mentionedUsers = _mentionedUsers.filter(id => id !== userId);
+  _refreshMentionsUI();
+}
+
+function _refreshMentionsUI() {
+  document.getElementById('mentions-list').innerHTML = _mentionedUsers.map(id => {
+    const u = getUser(id);
+    return `<span class="tag-pill">@${u.handle}<span class="remove" onclick="_removeMention('${id}')">×</span></span>`;
+  }).join('');
+}
+
+function submitPin() {
+  const title = (document.getElementById('d-title').value || '').trim().toUpperCase();
+  const cat   = document.getElementById('d-cat').value;
+  if (!title) {
+    document.getElementById('d-title').style.borderColor = 'rgba(237,232,213,.6)';
+    document.getElementById('d-title').focus();
+    return;
+  }
+  const newPin = {
+    id:       'p' + Date.now(),
+    title,
+    category: cat,
+    tags:     [..._drawerTags],
+    author:   CURRENT_USER.id,
+    likes:    0,
+    aspect:   1.0,
+    url:      (document.getElementById('d-url').value || '').trim(),
+    notes:    (document.getElementById('d-notes').value || '').trim(),
+  };
+  PINS.unshift(newPin);
+  _mentionedUsers.forEach(() => {
+    NOTIFICATIONS.unshift({
+      id: 'n' + Date.now(), type: 'mention',
+      from: CURRENT_USER.id, pinId: newPin.id, read: false,
+    });
+  });
+  closeDrawer();
+  navigateTo('feed');
+}
+```
+
+- [ ] **Step 2: Verificar no browser**
+
+No feed, clicar em `+ PIN`. Verificar:
+- Drawer desliza da direita com animação de 250ms
+- Overlay escuro aparece por trás
+- Clicar no overlay fecha o drawer (desliza para fora)
+- No drawer: clicar na área de upload → input de arquivo abre
+- Selecionar uma imagem → preview aparece em grayscale, área de upload some
+- Digitar tag + Enter → tag aparece como pill com ×; clicar × remove
+- Digitar "@lu" no campo de mencionar → dropdown com @lucas aparece; clicar seleciona; pill aparece
+- Preencher título "TESTE VISUAL" + categoria + submeter → drawer fecha, feed recarrega com novo card no topo
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add index.html
+git commit -m "feat: create pin drawer with image upload, tags and @mention"
+```
+
+---
+
+### Task 6: Pin detail page
+
+**Files:**
+- Modify: `index.html` — substituir a função placeholder `renderPinDetail()` e adicionar `renderPage()` e helpers de menção no detalhe
+
+**Interfaces:**
+- Consumes: `STATE.pinId`, `PINS`, `USERS`, `STATE.likedPins`, `STATE.savedPins`, `renderNavBar()`, `renderPinCard(pin)`, `avatarHTML()`, `toggleLike()`, `toggleSave()`, `goBack()`
+- Produces: `renderPinDetail()`, `renderPage()`, `openPin(pinId)` (já definido na Task 4)
+
+- [ ] **Step 1: Substituir a função placeholder renderPinDetail()**
+
+```javascript
+function renderPinDetail() {
+  const pin = getPin(STATE.pinId);
+  if (!pin) return `${renderNavBar()}<p class="caption" style="padding:48px;color:var(--text-faint);">PIN NÃO ENCONTRADO</p>`;
+
+  const author  = getUser(pin.author);
+  const liked   = STATE.likedPins.has(pin.id);
+  const saved   = STATE.savedPins.has(pin.id);
+  const related = PINS.filter(p => p.category === pin.category && p.id !== pin.id);
+  const relCols = [[], [], []];
+  related.forEach((p, i) => relCols[i % 3].push(p));
+
+  return `
+  ${renderNavBar()}
+  <!-- Back -->
+  <div style="padding:12px 20px;border-bottom:1px solid var(--border);">
+    <button class="btn-ghost" onclick="goBack()" style="gap:6px;font-size:9px;">
+      ← VOLTAR
+    </button>
+  </div>
+
+  <!-- 2-column layout -->
+  <div style="display:grid;grid-template-columns:60fr 40fr;
+              min-height:calc(100vh - 120px);border-bottom:1px solid var(--border);">
+
+    <!-- Left: image -->
+    <div style="padding:24px 20px;border-right:1px solid var(--border);">
+      <div style="width:100%;min-height:420px;background:var(--surface-hover);
+                  display:flex;align-items:center;justify-content:center;
+                  filter:grayscale(1) contrast(1.15);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+             stroke="rgba(237,232,213,.08)" stroke-width="1">
+          <rect x="3" y="3" width="18" height="18"/>
+          <circle cx="9" cy="9" r="2"/>
+          <path d="m21 15-5-5L5 21"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Right: metadata -->
+    <div style="padding:24px 20px;display:flex;flex-direction:column;gap:16px;">
+      <span class="caption" style="color:var(--text-muted);">${pin.category}</span>
+      <h1 class="display-sm">${pin.title}</h1>
+
+      <!-- Author -->
+      <div style="display:flex;align-items:center;gap:10px;
+                  padding:14px 0;border-top:1px solid var(--border);
+                  border-bottom:1px solid var(--border);">
+        ${avatarHTML(pin.author, 34)}
+        <div>
+          <p style="font-size:13px;font-weight:700;color:var(--text);">${author.name}</p>
+          <p style="font-size:10px;color:var(--text-muted);">@${author.handle}</p>
+        </div>
+      </div>
+
+      <!-- Tags -->
+      ${pin.tags.length ? `
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">
+        ${pin.tags.map(t => `<span class="tag-pill">${t}</span>`).join('')}
+      </div>` : ''}
+
+      <!-- Notes -->
+      ${pin.notes ? `<p style="font-size:13px;color:var(--text-muted);line-height:1.6;">${pin.notes}</p>` : ''}
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button onclick="toggleLike('${pin.id}')"
+                class="btn-ghost" style="gap:6px;">
+          ${liked ? '♥' : '♡'} ${pin.likes + (liked ? 1 : 0)} CURTIDAS
+        </button>
+        <button onclick="toggleSave('${pin.id}')"
+                class="btn-ghost" style="gap:6px;">
+          ${saved ? '⊞ SALVO' : '⊟ SALVAR'}
+        </button>
+        ${pin.url
+          ? `<a href="${pin.url}" target="_blank" rel="noopener"
+                class="btn-ghost" style="gap:6px;text-decoration:none;">
+               ABRIR LINK ↗
+             </a>`
+          : ''}
+      </div>
+
+      <!-- Mention from detail page -->
+      <div class="field" style="margin-bottom:0;">
+        <label class="field-label">Enviar para alguém</label>
+        <div style="position:relative;">
+          <input type="text" id="detail-mention-input"
+                 placeholder="@nome"
+                 style="font-size:11px;"
+                 oninput="_showDetailMentionDD(this.value,'${pin.id}')">
+          <div id="detail-mention-dd"
+               style="display:none;position:absolute;top:100%;left:0;right:0;
+                      background:#222;border:1px solid var(--border);z-index:5;
+                      max-height:140px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related pins -->
+  <div style="padding:20px;">
+    <p class="caption" style="margin-bottom:14px;color:var(--text-muted);">
+      MAIS COMO ESTE
+    </p>
+    ${related.length
+      ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+           ${relCols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
+         </div>`
+      : `<p class="caption" style="color:var(--text-faint);">NENHUMA REFERÊNCIA RELACIONADA</p>`
+    }
+  </div>`;
+}
+
+function renderPage() {
+  document.getElementById('app').innerHTML =
+    STATE.screen === 'pin' ? renderPinDetail() : renderFeed();
+}
+
+function _showDetailMentionDD(val, pinId) {
+  const dd = document.getElementById('detail-mention-dd');
+  const q  = val.replace('@','').toLowerCase();
+  if (!q) { dd.style.display = 'none'; return; }
+  const matches = USERS.filter(u =>
+    u.name.toLowerCase().includes(q) || u.handle.includes(q)
+  );
+  if (!matches.length) { dd.style.display = 'none'; return; }
+  dd.style.display = 'block';
+  dd.innerHTML = matches.map(u => `
+    <div onclick="_sendDetailMention('${u.id}','${pinId}',this)"
+         style="padding:8px 12px;cursor:pointer;display:flex;
+                align-items:center;gap:8px;font-size:11px;"
+         onmouseover="this.style.background='#333'"
+         onmouseout="this.style.background=''">
+      ${avatarHTML(u.id, 18)}
+      <span>@${u.handle}</span>
+    </div>`).join('');
+}
+
+function _sendDetailMention(toUserId, pinId, el) {
+  NOTIFICATIONS.unshift({
+    id: 'n'+Date.now(), type:'mention',
+    from: CURRENT_USER.id, pinId, read:false,
+  });
+  document.getElementById('detail-mention-input').value = '';
+  document.getElementById('detail-mention-dd').style.display = 'none';
+  // Brief visual feedback
+  const btn = el.closest('[id$="-dd"]');
+  if (btn) btn.style.display = 'none';
+}
+```
+
+- [ ] **Step 2: Verificar no browser**
+
+No feed, clicar em qualquer card. Verificar:
+- Abre página de detalhe com layout 2 colunas (60/40)
+- Coluna esquerda: placeholder de imagem em grayscale
+- Coluna direita: título em display-sm uppercase, categoria, tags, botões de curtir/salvar
+- Se o pin tem URL: botão "ABRIR LINK ↗" aparece
+- Campo de mencionar: digitar "@" + letra → dropdown aparece; clicar adiciona notificação
+- Botão "← VOLTAR": clicar volta ao feed na posição de scroll original
+- Grid "MAIS COMO ESTE" abaixo mostra pins da mesma categoria
+- Clicar em pin relacionado → abre detalhe do novo pin
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add index.html
+git commit -m "feat: pin detail page with back+scroll restore and related pins"
+```
+
+---
+
+### Task 7: Profile + Notifications
+
+**Files:**
+- Modify: `index.html` — substituir as funções placeholder `renderProfile()` e `renderNotifications()`
+
+**Interfaces:**
+- Consumes: `CURRENT_USER`, `PINS`, `STATE.savedPins`, `STATE.profileTab`, `NOTIFICATIONS`, `USERS`, `renderNavBar()`, `renderPinCard(pin)`, `avatarHTML()`, `navigateTo()`
+- Produces: `renderProfile()`, `renderNotifications()`, `switchProfileTab(tab)`
+
+- [ ] **Step 1: Substituir a função placeholder renderProfile()**
+
+```javascript
+function renderProfile() {
+  const myPins = PINS.filter(p => p.author === CURRENT_USER.id);
+  const saved  = PINS.filter(p => STATE.savedPins.has(p.id));
+  const pins   = STATE.profileTab === 'mine' ? myPins : saved;
+  const cols   = [[], [], []];
+  pins.forEach((p, i) => cols[i % 3].push(p));
+
+  return `
+  ${renderNavBar()}
+  <div style="padding:32px 20px 0;border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+      ${avatarHTML(CURRENT_USER.id, 56)}
+      <div style="flex:1;">
+        <p style="font-size:20px;font-weight:700;color:var(--text);">${CURRENT_USER.name}</p>
+        <p style="font-size:11px;color:var(--text-muted);margin-top:2px;">@${CURRENT_USER.handle}</p>
+      </div>
+      <div style="display:flex;gap:28px;text-align:center;">
+        <div>
+          <p style="font-size:20px;font-weight:700;">${myPins.length}</p>
+          <p class="caption" style="color:var(--text-muted);">PINS</p>
+        </div>
+        <div>
+          <p style="font-size:20px;font-weight:700;">${STATE.savedPins.size}</p>
+          <p class="caption" style="color:var(--text-muted);">SALVOS</p>
+        </div>
+        <div>
+          <p style="font-size:20px;font-weight:700;">${myPins.reduce((acc,p) => acc+p.likes,0)}</p>
+          <p class="caption" style="color:var(--text-muted);">CURTIDAS</p>
+        </div>
+      </div>
+    </div>
+    <!-- Tabs -->
+    <div style="display:flex;">
+      ${[['mine','MEUS PINS'],['saved','SALVOS']].map(([tab, label]) => {
+        const active = STATE.profileTab === tab;
+        return `<button onclick="switchProfileTab('${tab}')"
+          style="background:none;border:none;
+                 border-bottom:${active?'2px solid var(--text)':'2px solid transparent'};
+                 color:${active?'var(--text)':'var(--text-muted)'};
+                 font-family:var(--font);font-size:9px;font-weight:700;
+                 letter-spacing:1.2px;text-transform:uppercase;
+                 padding:10px 14px;cursor:pointer;margin-bottom:-1px;">${label}</button>`;
+      }).join('')}
+    </div>
+  </div>
+  <div style="padding:12px 20px;">
+    ${pins.length
+      ? `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;">
+           ${cols.map(col => `<div>${col.map(renderPinCard).join('')}</div>`).join('')}
+         </div>`
+      : `<p class="caption" style="color:var(--text-faint);padding:48px;text-align:center;">
+           ${STATE.profileTab === 'mine' ? 'NENHUM PIN PUBLICADO' : 'NENHUM PIN SALVO'}
+         </p>`
+    }
+  </div>`;
+}
+
+function switchProfileTab(tab) {
+  STATE.profileTab = tab;
+  document.getElementById('app').innerHTML = renderProfile();
+}
+```
+
+- [ ] **Step 2: Substituir a função placeholder renderNotifications()**
+
+```javascript
+function renderNotifications() {
+  const labels = {
+    mention: 'mencionou você em',
+    like:    'curtiu seu pin',
+    save:    'salvou seu pin',
+  };
+  return `
+  ${renderNavBar()}
+  <div style="max-width:680px;margin:0 auto;padding:32px 20px;">
+    <h1 class="display-sm" style="margin-bottom:28px;">NOTIFICAÇÕES</h1>
+    ${NOTIFICATIONS.length === 0
+      ? `<p class="caption" style="color:var(--text-faint);">NENHUMA NOTIFICAÇÃO</p>`
+      : NOTIFICATIONS.map(n => {
+          const from = getUser(n.from);
+          const pin  = getPin(n.pinId);
+          return `
+          <div onclick="${pin ? `navigateTo('pin',{pinId:'${n.pinId}'})` : ''}"
+               style="display:flex;align-items:center;gap:12px;
+                      padding:14px ${n.read ? '0' : '14px'};
+                      margin-left:${n.read ? '0' : '-2px'};
+                      border-left:${n.read ? 'none' : '2px solid var(--text)'};
+                      border-bottom:1px solid var(--border);
+                      cursor:${pin ? 'pointer' : 'default'};
+                      transition:background .15s;"
+               onmouseover="this.style.background='rgba(237,232,213,.03)'"
+               onmouseout="this.style.background=''">
+            ${avatarHTML(n.from, 28)}
+            <p style="flex:1;font-size:12px;line-height:1.5;">
+              <strong style="color:var(--text);font-weight:700;">@${from.handle}</strong>
+              <span style="color:var(--text-muted);"> ${labels[n.type]} </span>
+              ${pin ? `<strong style="color:var(--text);font-weight:700;">${pin.title}</strong>` : ''}
+            </p>
+            ${!n.read
+              ? `<span style="width:6px;height:6px;border-radius:50%;
+                              background:var(--text);flex-shrink:0;"></span>`
+              : ''}
+          </div>`;
+        }).join('')
+    }
+  </div>`;
+}
+```
+
+- [ ] **Step 3: Verificar no browser**
+
+No feed, clicar no avatar no canto superior direito. Verificar:
+- Página de perfil com nome, @handle, contadores (pins, salvos, curtidas)
+- Grid masonry dos próprios pins (p1, p8, p17 — pins do usuário u1/Lucas)
+- Clicar em "SALVOS" → grid mostra p3 e p5 (pré-salvos no STATE)
+- Clicar no sino de notificações → página de notificações
+- 2 notificações com badge branco (não lidas), 2 sem badge (lidas)
+- Clicar em notificação com pin → navega para o detalhe do pin
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add index.html
+git commit -m "feat: profile page with tabs + notifications page"
+```
+
+---
+
+### Task 8: Interactivity, toggles e boot
+
+**Files:**
+- Modify: `index.html` — adicionar `toggleLike()`, `toggleSave()` e ajustar o bloco `// ── BOOT`
+
+**Interfaces:**
+- Consumes: `STATE.likedPins`, `STATE.savedPins`, `STATE.screen`, `renderFeed()`, `renderPinDetail()`
+- Produces: `toggleLike(pinId)`, `toggleSave(pinId)` funcionando em feed e detalhe; boot sequence correta
+
+- [ ] **Step 1: Adicionar toggleLike() e toggleSave() antes do bloco `// ── BOOT`**
+
+```javascript
+// ── INTERACTIVITY ────────────────────────────────────────────
+function toggleLike(pinId) {
+  if (STATE.likedPins.has(pinId)) STATE.likedPins.delete(pinId);
+  else STATE.likedPins.add(pinId);
+  document.getElementById('app').innerHTML =
+    STATE.screen === 'pin' ? renderPinDetail() : renderFeed();
+}
+
+function toggleSave(pinId) {
+  if (STATE.savedPins.has(pinId)) STATE.savedPins.delete(pinId);
+  else STATE.savedPins.add(pinId);
+  document.getElementById('app').innerHTML =
+    STATE.screen === 'pin' ? renderPinDetail() : renderFeed();
+}
+```
+
+- [ ] **Step 2: Substituir o bloco `// ── BOOT` pelo boot definitivo**
+
+```javascript
+// ── BOOT ─────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  history.replaceState({ screen:'login' }, '', '#login');
+  render();
+});
+```
+
+- [ ] **Step 3: Verificar walkthrough completo no browser**
+
+Percurso de aprovação — executar cada etapa em sequência:
+
+1. Abrir `index.html` → tela de login com wordmark e botão Google
+2. Clicar "ENTRAR COM GOOGLE" → feed com 20 pins em grid 3 colunas
+3. Clicar em coração de qualquer card → contador incrementa, ícone fica branco
+4. Clicar em bookmark de qualquer card → ícone muda para ⊞ (salvo)
+5. Clicar em "MOTION" → grid filtra para 3 pins de motion; tab sublinhada
+6. Digitar "chanel" na busca → só "CHANEL N°5 FILM" aparece
+7. Limpar busca → todos os pins de motion voltam
+8. Clicar em "TODOS" → 20 pins
+9. Clicar em "+ PIN" → drawer desliza da direita
+10. Preencher título "MINHA REF", selecionar categoria, adicionar tag "teste" + Enter
+11. Clicar "PUBLICAR PIN" → drawer fecha, novo card aparece no topo do feed
+12. Clicar no novo card → tela de detalhe (2 colunas)
+13. Clicar em "♡ 0 CURTIDAS" → vira "♥ 1 CURTIDAS"
+14. Clicar "← VOLTAR" → feed na mesma posição de scroll
+15. Clicar no avatar do canto superior direito → perfil com stats
+16. Clicar em "SALVOS" → pins salvos aparecem
+17. Clicar no sino → notificações com badges
+18. Console: zero erros
+
+- [ ] **Step 4: Commit final**
+
+```bash
+git add index.html
+git commit -m "feat: like/save toggles + boot sequence - prototype complete"
+```
+
+---
+
+## Checklist de self-review
+
+- [x] **Spec coverage:** Login ✓ · Feed com categorias e busca ✓ · Drawer criar pin ✓ · Pin detalhe com voltar + scroll restore ✓ · Pins relacionados ✓ · Perfil com tabs ✓ · Notificações ✓ · Like ✓ · Save/repin ✓ · @mention ✓
+- [x] **Placeholders:** Nenhum TBD ou TODO nas tarefas de código
+- [x] **Consistência de tipos:** `openPin(pinId)` definido na Task 4, consumido nas Tasks 3, 6 e 7 ✓ · `toggleLike(pinId)` / `toggleSave(pinId)` definidos na Task 8, referenciados nas Tasks 3 e 6 ✓ · `renderPage()` definido na Task 6 (não é mais usado diretamente — toggles chamam renderFeed/renderPinDetail inline)
+- [x] **Arquivo único:** Todas as Tasks modificam apenas `index.html`
