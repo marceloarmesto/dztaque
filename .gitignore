@@ -5,6 +5,9 @@
 /.next/
 /out/
 
+# typescript
+tsconfig.tsbuildinfo
+
 # env files
 .env*.local
 .env.local
