@@ -1,11 +1,13 @@
 'use client'
 
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import type { PinWithMeta } from '@/lib/pins'
 import LikeButton from './LikeButton'
 import SaveButton from './SaveButton'
 
 export default function PinCard({ pin }: { pin: PinWithMeta }) {
+  const router = useRouter()
   const imgH = Math.round(180 * pin.aspect)
   return (
     <Link
@@ -40,16 +42,15 @@ export default function PinCard({ pin }: { pin: PinWithMeta }) {
           {pin.title}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <a
-            href={`/profile/${pin.authorHandle}`}
-            onClick={(e) => e.stopPropagation()}
-            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+          <span
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${pin.authorHandle}`) }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
           >
             <span className="avatar" style={{ width: '16px', height: '16px', fontSize: '6px' }}>
               {pin.authorInitials}
             </span>
             <span style={{ fontSize: '8px', color: 'var(--text-muted)' }}>@{pin.authorHandle}</span>
-          </a>
+          </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <LikeButton pinId={pin.id} initialLiked={pin.likedByMe} initialCount={pin.likeCount} />
             <SaveButton pinId={pin.id} initialSaved={pin.savedByMe} />
