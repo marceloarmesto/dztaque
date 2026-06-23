@@ -192,3 +192,124 @@ export async function getExistingTags(): Promise<string[]> {
   }
   return Array.from(seen).sort()
 }
+
+// ── Tipos de perfil ───────────────────────────────────────────
+export type ProfileWithStats = {
+  id: string
+  name: string
+  handle: string
+  avatarUrl: string | null
+  createdAt: string
+  pinsCount: number
+  collectionsCount: number
+  likesReceived: number
+}
+
+export type CollectionGroup = {
+  name: string
+  count: number
+  previewImages: string[]  // até 4 imageUrl dos pins mais recentes
+}
+
+// ── Perfil com stats ──────────────────────────────────────────
+export async function getProfileWithStats(handle: string): Promise<ProfileWithStats | null> {
+  const supabase = await createClient()
+
+  const { data: profile, error: pe } = await supabase
+    .from('profiles')
+    .select('id, name, handle, avatar_url, created_at')
+    .eq('handle', handle)
+    .single()
+  if (pe || !profile) return null
+
+  const { data: authorPins } = await supabase
+    .from('pins')
+    .select('id, collection')
+    .eq('author_id', profile.id)
+
+  const pins = (authorPins ?? []) as { id: string; collection: string }[]
+  const pinIds = pins.map((p) => p.id)
+
+  const pinsCount = pins.length
+  const collectionsCount = new Set(pins.map((p) => p.collection)).size
+
+  let likesReceived = 0
+  if (pinIds.length > 0) {
+    const { count } = await supabase
+      .from('likes')
+      .select('*', { count: 'exact', head: true })
+      .in('pin_id', pinIds)
+    likesReceived = count ?? 0
+  }
+
+  return {
+    id: profile.id,
+    name: profile.name,
+    handle: profile.handle,
+    avatarUrl: profile.avatar_url,
+    createdAt: profile.created_at,
+    pinsCount,
+    collectionsCount,
+    likesReceived,
+  }
+}
+
+// ── Pins de um autor (com metadados de like/save) ─────────────
+export async function getAuthorPins(authorId: string): Promise<PinWithMeta[]> {
+  const supabase = await createClient()
+  const uid = await currentUserId()
+  const { data, error } = await supabase.rpc('get_feed_pins', {
+    p_user_id: uid,
+    p_collection: null,
+    p_search: null,
+    p_cursor: null,
+    p_limit: 1000,
+    p_author_id: authorId,
+  })
+  if (error) throw new Error(`getAuthorPins: ${error.message}`)
+  return ((data ?? []) as FeedRow[]).map(mapRow)
+}
+
+// ── Pins salvos por um usuário (com metadados de like/save) ───
+// Carrega todos os pins e filtra pelos IDs salvos — aceitável para escala atual da DZ.
+export async function getSavedPins(userId: string): Promise<PinWithMeta[]> {
+  const supabase = await createClient()
+  const uid = await currentUserId()
+
+  const { data: saves } = await supabase
+    .from('saves')
+    .select('pin_id, created_at')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false })
+
+  const pinIds = ((saves ?? []) as { pin_id: string }[]).map((s) => s.pin_id)
+  if (pinIds.length === 0) return []
+
+  const { data, error } = await supabase.rpc('get_feed_pins', {
+    p_user_id: uid,
+    p_collection: null,
+    p_search: null,
+    p_cursor: null,
+    p_limit: 2000,
+    p_author_id: null,
+  })
+  if (error) throw new Error(`getSavedPins: ${error.message}`)
+
+  const all = new Map(((data ?? []) as FeedRow[]).map((r) => [r.id, mapRow(r)]))
+  return pinIds.map((id) => all.get(id)).filter(Boolean) as PinWithMeta[]
+}
+
+// ── Coleções derivadas de um conjunto de pins ─────────────────
+// Mantém a ordem de primeira aparição (pins já vêm por created_at DESC).
+export function groupByCollection(pins: PinWithMeta[]): CollectionGroup[] {
+  const map = new Map<string, PinWithMeta[]>()
+  for (const pin of pins) {
+    if (!map.has(pin.collection)) map.set(pin.collection, [])
+    map.get(pin.collection)!.push(pin)
+  }
+  return Array.from(map.entries()).map(([name, colPins]) => ({
+    name,
+    count: colPins.length,
+    previewImages: colPins.slice(0, 4).map((p) => p.imageUrl),
+  }))
+}
