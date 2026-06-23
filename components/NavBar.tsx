@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import SearchInput from './SearchInput'
 
 async function signOut() {
   'use server'
@@ -39,6 +40,8 @@ export default async function NavBar() {
       >
         DZTAQUE
       </a>
+
+      <SearchInput />
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <form action={signOut}>
