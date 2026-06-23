@@ -30,6 +30,10 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
   const [collectionSuggestions, setCollectionSuggestions] = useState<string[]>([])
   const [showCollectionDD, setShowCollectionDD] = useState(false)
 
+  // Tags autocomplete
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
+  const [showTagDD, setShowTagDD] = useState(false)
+
   // @Menção
   const [mentionInput, setMentionInput] = useState('')
   const [mentionSuggestions, setMentionSuggestions] = useState<Profile[]>([])
@@ -47,11 +51,15 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
     })
   }, [])
 
-  // Carregar coleções do usuário
+  // Carregar coleções e tags da DZ ao abrir
   useEffect(() => {
     fetch('/api/collections')
       .then((r) => r.json())
       .then((d) => { if (d.collections) setCollectionSuggestions(d.collections) })
+      .catch(() => {})
+    fetch('/api/tags')
+      .then((r) => r.json())
+      .then((d) => { if (d.tags) setTagSuggestions(d.tags) })
       .catch(() => {})
   }, [])
 
@@ -330,13 +338,44 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
             {/* Tags */}
             <div className="field">
               <label className="field-label">Tags</label>
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={handleTagKeyDown}
-                placeholder="digite e pressione Enter"
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => { setTagInput(e.target.value); setShowTagDD(true) }}
+                  onFocus={() => setShowTagDD(true)}
+                  onBlur={() => setTimeout(() => setShowTagDD(false), 150)}
+                  onKeyDown={handleTagKeyDown}
+                  placeholder="digite e pressione Enter"
+                  autoComplete="off"
+                />
+                {showTagDD && tagInput.trim() && (() => {
+                  const q = tagInput.trim().toLowerCase()
+                  const filtered = tagSuggestions.filter(
+                    (t) => t.includes(q) && !tags.includes(t)
+                  ).slice(0, 6)
+                  return filtered.length > 0 ? (
+                    <div style={{
+                      position: 'absolute', top: '100%', left: 0, right: 0, background: '#222',
+                      border: '1px solid var(--border)', zIndex: 5, maxHeight: '140px', overflowY: 'auto',
+                    }}>
+                      {filtered.map((t) => (
+                        <div
+                          key={t}
+                          onMouseDown={() => {
+                            if (!tags.includes(t)) setTags((tg) => [...tg, t])
+                            setTagInput('')
+                            setShowTagDD(false)
+                          }}
+                          style={{ padding: '7px 12px', cursor: 'pointer', fontSize: '11px', color: 'var(--text)' }}
+                          onMouseOver={(e) => (e.currentTarget.style.background = '#333')}
+                          onMouseOut={(e) => (e.currentTarget.style.background = '')}
+                        >{t}</div>
+                      ))}
+                    </div>
+                  ) : null
+                })()}
+              </div>
               {tags.length > 0 && (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginTop: '6px' }}>
                   {tags.map((t) => (

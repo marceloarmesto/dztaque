@@ -157,3 +157,38 @@ export async function getUserCollections(userId: string): Promise<string[]> {
   }
   return result
 }
+
+// Todas as coleções únicas de toda a DZ, ordenadas por mais recente
+export async function getAllCollections(): Promise<string[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('pins')
+    .select('collection, created_at')
+    .order('created_at', { ascending: false })
+    .limit(500)
+  if (error) throw new Error(`getAllCollections: ${error.message}`)
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const row of (data ?? []) as { collection: string }[]) {
+    if (!seen.has(row.collection)) {
+      seen.add(row.collection)
+      result.push(row.collection)
+    }
+  }
+  return result
+}
+
+// Todas as tags únicas já usadas na DZ, ordenadas alfabeticamente
+export async function getExistingTags(): Promise<string[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('pins')
+    .select('tags')
+    .limit(500)
+  if (error) throw new Error(`getExistingTags: ${error.message}`)
+  const seen = new Set<string>()
+  for (const row of (data ?? []) as { tags: string[] }[]) {
+    for (const tag of row.tags ?? []) seen.add(tag)
+  }
+  return Array.from(seen).sort()
+}
