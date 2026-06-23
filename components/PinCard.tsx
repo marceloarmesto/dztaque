@@ -40,12 +40,16 @@ export default function PinCard({ pin }: { pin: PinWithMeta }) {
           {pin.title}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <a
+            href={`/profile/${pin.authorHandle}`}
+            onClick={(e) => e.stopPropagation()}
+            style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '5px' }}
+          >
             <span className="avatar" style={{ width: '16px', height: '16px', fontSize: '6px' }}>
               {pin.authorInitials}
             </span>
             <span style={{ fontSize: '8px', color: 'var(--text-muted)' }}>@{pin.authorHandle}</span>
-          </span>
+          </a>
           <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <LikeButton pinId={pin.id} initialLiked={pin.likedByMe} initialCount={pin.likeCount} />
             <SaveButton pinId={pin.id} initialSaved={pin.savedByMe} />

@@ -60,13 +60,14 @@ export default async function NavBar() {
             SAIR
           </button>
         </form>
-        <span
-          className="avatar"
-          title={name}
-          style={{ width: '28px', height: '28px', fontSize: '11px', cursor: 'pointer' }}
-        >
-          {initials || '?'}
-        </span>
+        <a href="/profile" title={name} style={{ cursor: 'pointer', textDecoration: 'none' }}>
+          <span
+            className="avatar"
+            style={{ width: '28px', height: '28px', fontSize: '11px' }}
+          >
+            {initials || '?'}
+          </span>
+        </a>
       </div>
     </nav>
   )
