@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import SearchInput from './SearchInput'
@@ -41,7 +42,15 @@ export default async function NavBar() {
         DZTAQUE
       </a>
 
-      <SearchInput />
+      <Suspense fallback={
+        <div style={{
+          flex: 1, maxWidth: '340px', margin: '0 24px',
+          background: 'rgba(237,232,213,.07)', border: '1px solid var(--border)',
+          padding: '6px 12px', height: '32px',
+        }} />
+      }>
+        <SearchInput />
+      </Suspense>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <form action={signOut}>
