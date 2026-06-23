@@ -1,13 +1,30 @@
 import NavBar from '@/components/NavBar'
+import CollectionTabs from '@/components/CollectionTabs'
+import FeedGrid from '@/components/FeedGrid'
+import { getFeedPins, getRecentCollections } from '@/lib/pins'
 
-export default function FeedPage() {
+export default async function FeedPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ collection?: string; q?: string }>
+}) {
+  const { collection, q } = await searchParams
+  const [{ pins, nextCursor }, collections] = await Promise.all([
+    getFeedPins({ collection, search: q }),
+    getRecentCollections(3),
+  ])
+
   return (
     <>
       <NavBar />
-      <div style={{ padding: '64px 20px', textAlign: 'center' }}>
-        <p className="caption" style={{ color: 'var(--text-faint)' }}>
-          FEED EM BREVE — FASE 2
-        </p>
+      <CollectionTabs collections={collections} active={collection ?? ''} />
+      <div style={{ padding: '12px 20px' }}>
+        <FeedGrid
+          initialPins={pins}
+          nextCursor={nextCursor}
+          collection={collection ?? 'TODOS'}
+          q={q ?? ''}
+        />
       </div>
     </>
   )
