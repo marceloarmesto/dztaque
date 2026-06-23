@@ -137,3 +137,23 @@ export async function getRecentCollections(limit = 3): Promise<string[]> {
   }
   return result
 }
+
+export async function getUserCollections(userId: string): Promise<string[]> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('pins')
+    .select('collection, created_at')
+    .eq('author_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(200)
+  if (error) throw new Error(`getUserCollections: ${error.message}`)
+  const seen = new Set<string>()
+  const result: string[] = []
+  for (const row of (data ?? []) as { collection: string }[]) {
+    if (!seen.has(row.collection)) {
+      seen.add(row.collection)
+      result.push(row.collection)
+    }
+  }
+  return result
+}
