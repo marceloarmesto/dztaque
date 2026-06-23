@@ -68,7 +68,8 @@ CREATE OR REPLACE FUNCTION public.get_feed_pins(
   p_collection TEXT DEFAULT NULL,
   p_search     TEXT DEFAULT NULL,
   p_cursor     TIMESTAMPTZ DEFAULT NULL,
-  p_limit      INT DEFAULT 30
+  p_limit      INT DEFAULT 30,
+  p_author_id  UUID DEFAULT NULL
 )
 RETURNS TABLE (
   id            UUID,
@@ -100,7 +101,8 @@ AS $$
   FROM public.pins p
   JOIN public.profiles pr ON pr.id = p.author_id
   WHERE
-    (p_collection IS NULL OR p.collection = p_collection)
+    (p_author_id IS NULL OR p.author_id = p_author_id)
+    AND (p_collection IS NULL OR p.collection = p_collection)
     AND (
       p_search IS NULL OR p_search = '' OR
       p.title ILIKE '%' || p_search || '%' OR
