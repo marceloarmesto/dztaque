@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import SearchInput from './SearchInput'
+import CreatePinButton from './CreatePinButton'
 
 async function signOut() {
   'use server'
@@ -53,6 +54,7 @@ export default async function NavBar() {
       </Suspense>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <CreatePinButton />
         <form action={signOut}>
           <button type="submit" className="btn-ghost" style={{ fontSize: '9px' }}>
             SAIR
