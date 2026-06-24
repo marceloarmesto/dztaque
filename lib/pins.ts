@@ -8,6 +8,7 @@ export type PinWithMeta = {
   authorName: string
   authorHandle: string
   authorInitials: string
+  authorAvatarUrl: string | null
   title: string
   collection: string
   tags: string[]
@@ -28,6 +29,7 @@ type FeedRow = {
   author_id: string
   author_name: string
   author_handle: string
+  author_avatar_url: string | null
   title: string
   collection: string
   tags: string[]
@@ -57,6 +59,7 @@ function mapRow(r: FeedRow): PinWithMeta {
     authorName: r.author_name,
     authorHandle: r.author_handle,
     authorInitials: initialsFrom(r.author_name),
+    authorAvatarUrl: r.author_avatar_url,
     title: r.title,
     collection: r.collection,
     tags: r.tags ?? [],

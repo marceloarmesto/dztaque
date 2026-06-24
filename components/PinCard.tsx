@@ -46,8 +46,10 @@ export default function PinCard({ pin }: { pin: PinWithMeta }) {
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); router.push(`/profile/${pin.authorHandle}`) }}
             style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}
           >
-            <span className="avatar" style={{ width: '16px', height: '16px', fontSize: '6px' }}>
-              {pin.authorInitials}
+            <span className="avatar" style={{ width: '16px', height: '16px', fontSize: '6px', overflow: 'hidden' }}>
+              {pin.authorAvatarUrl
+                ? <img src={pin.authorAvatarUrl} alt={pin.authorHandle} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                : pin.authorInitials}
             </span>
             <span style={{ fontSize: '8px', color: 'var(--text-muted)' }}>@{pin.authorHandle}</span>
           </span>

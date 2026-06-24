@@ -17,7 +17,7 @@ export default async function NavBar() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('name, handle')
+    .select('name, handle, avatar_url')
     .eq('id', user?.id ?? '')
     .single()
 
@@ -85,11 +85,10 @@ export default async function NavBar() {
           </button>
         </form>
         <a href="/profile" title={name} style={{ cursor: 'pointer', textDecoration: 'none' }}>
-          <span
-            className="avatar"
-            style={{ width: '28px', height: '28px', fontSize: '11px' }}
-          >
-            {initials || '?'}
+          <span className="avatar" style={{ width: '28px', height: '28px', fontSize: '11px', overflow: 'hidden' }}>
+            {profile?.avatar_url
+              ? <img src={profile.avatar_url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              : initials || '?'}
           </span>
         </a>
       </div>

@@ -26,11 +26,10 @@ export default function ProfileHeader({
   return (
     <div style={{ padding: '32px 20px 0', borderBottom: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
-        <span
-          className="avatar"
-          style={{ width: '56px', height: '56px', fontSize: '22px', flexShrink: 0 }}
-        >
-          {initials || '?'}
+        <span className="avatar" style={{ width: '56px', height: '56px', fontSize: '22px', flexShrink: 0, overflow: 'hidden' }}>
+          {profile.avatarUrl
+            ? <img src={profile.avatarUrl} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            : initials || '?'}
         </span>
 
         <div style={{ flex: 1 }}>
