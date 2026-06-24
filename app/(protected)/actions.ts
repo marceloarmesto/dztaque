@@ -2,6 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+// Helper interno: busca o autor de um pin
+async function getPinAuthorId(pinId: string, supabase: SupabaseClient): Promise<string | null> {
+  const { data } = await supabase.from('pins').select('author_id').eq('id', pinId).single()
+  return (data as { author_id: string } | null)?.author_id ?? null
+}
 
 export async function toggleLike(pinId: string): Promise<{ liked: boolean; count: number }> {
   const supabase = await createClient()
@@ -19,6 +26,25 @@ export async function toggleLike(pinId: string): Promise<{ liked: boolean; count
     await supabase.from('likes').delete().eq('pin_id', pinId).eq('user_id', user.id)
   } else {
     await supabase.from('likes').insert({ pin_id: pinId, user_id: user.id })
+    // Notificação: 1ª vez, sem self-notification
+    const authorId = await getPinAuthorId(pinId, supabase)
+    if (authorId && authorId !== user.id) {
+      const { data: existingNotif } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('type', 'like')
+        .eq('from_user_id', user.id)
+        .eq('pin_id', pinId)
+        .maybeSingle()
+      if (!existingNotif) {
+        await supabase.from('notifications').insert({
+          type: 'like',
+          from_user_id: user.id,
+          to_user_id: authorId,
+          pin_id: pinId,
+        })
+      }
+    }
   }
 
   const { count } = await supabase
@@ -45,6 +71,25 @@ export async function toggleSave(pinId: string): Promise<{ saved: boolean }> {
     await supabase.from('saves').delete().eq('pin_id', pinId).eq('user_id', user.id)
   } else {
     await supabase.from('saves').insert({ pin_id: pinId, user_id: user.id })
+    // Notificação: 1ª vez, sem self-notification
+    const authorId = await getPinAuthorId(pinId, supabase)
+    if (authorId && authorId !== user.id) {
+      const { data: existingNotif } = await supabase
+        .from('notifications')
+        .select('id')
+        .eq('type', 'save')
+        .eq('from_user_id', user.id)
+        .eq('pin_id', pinId)
+        .maybeSingle()
+      if (!existingNotif) {
+        await supabase.from('notifications').insert({
+          type: 'save',
+          from_user_id: user.id,
+          to_user_id: authorId,
+          pin_id: pinId,
+        })
+      }
+    }
   }
 
   return { saved: !existing }
@@ -102,4 +147,15 @@ export async function createPin(data: CreatePinData): Promise<CreatePinResult> {
 
   revalidatePath('/feed')
   return { success: true, pinId: pin.id }
+}
+
+export async function markNotificationsRead(): Promise<void> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+  await supabase
+    .from('notifications')
+    .update({ read: true })
+    .eq('to_user_id', user.id)
+    .eq('read', false)
 }

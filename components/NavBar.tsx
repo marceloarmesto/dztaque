@@ -29,6 +29,12 @@ export default async function NavBar() {
     .map((w: string) => w[0].toUpperCase())
     .join('')
 
+  const { count: unreadCount } = await supabase
+    .from('notifications')
+    .select('*', { count: 'exact', head: true })
+    .eq('to_user_id', user?.id ?? '')
+    .eq('read', false)
+
   return (
     <nav style={{
       position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg)',
@@ -55,6 +61,24 @@ export default async function NavBar() {
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <CreatePinButton />
+        <a
+          href="/notifications"
+          aria-label="Notificações"
+          style={{ position: 'relative', textDecoration: 'none', display: 'flex', alignItems: 'center', padding: '6px 8px' }}
+          className="btn-ghost"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+          {(unreadCount ?? 0) > 0 && (
+            <span style={{
+              position: 'absolute', top: '3px', right: '3px',
+              width: '7px', height: '7px',
+              background: 'var(--text)', borderRadius: '50%',
+            }} />
+          )}
+        </a>
         <form action={signOut}>
           <button type="submit" className="btn-ghost" style={{ fontSize: '9px' }}>
             SAIR
