@@ -155,7 +155,9 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
       tags,
       imageUrl,
       aspect,
-      sourceUrl: sourceUrl.trim() || undefined,
+      sourceUrl: sourceUrl.trim()
+        ? sourceUrl.trim().match(/^https?:\/\//) ? sourceUrl.trim() : `https://${sourceUrl.trim()}`
+        : undefined,
       notes: notes.trim() || undefined,
       mentionedUserIds: mentionedUsers.map((u) => u.id),
     })
@@ -271,10 +273,10 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
               <label className="field-label">URL de origem</label>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <input
-                  type="url"
+                  type="text"
                   value={sourceUrl}
                   onChange={(e) => setSourceUrl(e.target.value)}
-                  placeholder="https://..."
+                  placeholder="ex: facebook.com ou https://..."
                   style={{ flex: 1 }}
                 />
                 {sourceUrl && !imagePreview && (
