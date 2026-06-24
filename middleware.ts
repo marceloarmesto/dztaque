@@ -38,6 +38,15 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Defesa em profundidade: valida domínio mesmo com sessão válida
+  if (user && !isAuthRoute && !user.email?.endsWith('@dzestudio.com.br')) {
+    await supabase.auth.signOut()
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    url.searchParams.set('error', 'domain')
+    return NextResponse.redirect(url)
+  }
+
   if (user && pathname === '/login') {
     const url = request.nextUrl.clone()
     url.pathname = '/feed'

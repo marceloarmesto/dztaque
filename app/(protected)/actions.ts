@@ -117,6 +117,17 @@ export async function createPin(data: CreatePinData): Promise<CreatePinResult> {
   if (!data.collection.trim()) return { success: false, error: 'Coleção obrigatória' }
   if (!data.imageUrl.trim()) return { success: false, error: 'Imagem obrigatória' }
 
+  // Valida que a imagem vem de domínio permitido (Cloudinary ou Unsplash para seeds)
+  const ALLOWED_IMAGE_HOSTS = ['res.cloudinary.com', 'images.unsplash.com']
+  try {
+    const parsed = new URL(data.imageUrl)
+    if (!ALLOWED_IMAGE_HOSTS.includes(parsed.hostname)) {
+      return { success: false, error: 'Origem de imagem não permitida' }
+    }
+  } catch {
+    return { success: false, error: 'URL de imagem inválida' }
+  }
+
   const { data: pin, error: pinError } = await supabase
     .from('pins')
     .insert({

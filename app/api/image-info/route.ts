@@ -9,6 +9,24 @@ export async function GET(request: NextRequest) {
   const url = request.nextUrl.searchParams.get('url')
   if (!url) return NextResponse.json({ width: 1, height: 1 })
 
+  // Previne SSRF: só permite buscar dimensões de domínios públicos conhecidos
+  const ALLOWED_FETCH_HOSTS = [
+    'res.cloudinary.com',
+    'images.unsplash.com',
+    'i.imgur.com',
+    'pbs.twimg.com',
+    'cdn.dribbble.com',
+    'images.squarespace-cdn.com',
+  ]
+  try {
+    const parsed = new URL(url)
+    if (!ALLOWED_FETCH_HOSTS.some((h) => parsed.hostname === h || parsed.hostname.endsWith('.' + h))) {
+      return NextResponse.json({ width: 1, height: 1 })
+    }
+  } catch {
+    return NextResponse.json({ width: 1, height: 1 })
+  }
+
   const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
   if (!cloud) return NextResponse.json({ width: 1, height: 1 })
 
