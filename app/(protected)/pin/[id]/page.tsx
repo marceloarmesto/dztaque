@@ -4,7 +4,9 @@ import PinCard from '@/components/PinCard'
 import LikeButton from '@/components/LikeButton'
 import SaveButton from '@/components/SaveButton'
 import BackButton from '@/components/BackButton'
+import PinOwnerActions from '@/components/PinOwnerActions'
 import { getPinById, getRelatedPins } from '@/lib/pins'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function PinDetailPage({
   params,
@@ -13,6 +15,8 @@ export default async function PinDetailPage({
 }) {
   const { id } = await params
   const pin = await getPinById(id)
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
 
   if (!pin) {
     return (
@@ -84,6 +88,7 @@ export default async function PinDetailPage({
           <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
             <LikeButton pinId={pin.id} initialLiked={pin.likedByMe} initialCount={pin.likeCount} />
             <SaveButton pinId={pin.id} initialSaved={pin.savedByMe} />
+            {pin.authorId === user?.id && <PinOwnerActions pin={pin} />}
             {pin.sourceUrl && (
               <a
                 href={pin.sourceUrl}
