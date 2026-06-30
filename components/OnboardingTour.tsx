@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 
 type TourStep = {
   selector: string
@@ -66,6 +67,7 @@ const TOOLTIP_WIDTH = 320
 const TOOLTIP_GAP = 12
 
 export default function OnboardingTour() {
+  const pathname = usePathname()
   const [active, setActive] = useState(false)
   const [stepIdx, setStepIdx] = useState(0)
   const [rect, setRect] = useState<DOMRect | null>(null)
@@ -74,10 +76,10 @@ export default function OnboardingTour() {
 
   // Verifica localStorage apenas no cliente, após hidratação
   useEffect(() => {
-    if (localStorage.getItem(STORAGE_KEY) !== '1') {
+    if (pathname === '/feed' && localStorage.getItem(STORAGE_KEY) !== '1') {
       setActive(true)
     }
-  }, [])
+  }, [pathname])
 
   // Avança para o passo `idx`, pulando elementos ausentes no DOM
   const goToStep = useCallback((idx: number) => {
@@ -117,7 +119,7 @@ export default function OnboardingTour() {
     if (tooltipRef.current) {
       setTooltipHeight(tooltipRef.current.offsetHeight)
     }
-  })
+  }, [stepIdx])
 
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, '1')
@@ -153,6 +155,15 @@ export default function OnboardingTour() {
 
   return (
     <>
+      {/* Full-screen click blocker — prevents interacting with the page during the tour */}
+      <div
+        style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 200,
+        }}
+      />
+
       {/* Spotlight: cobre toda a tela com o "buraco" sobre o elemento */}
       <div
         style={{
