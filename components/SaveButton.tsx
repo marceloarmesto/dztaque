@@ -30,6 +30,7 @@ export default function SaveButton({
 
   return (
     <button
+      data-tour="save-btn"
       onClick={handleClick}
       aria-label="Salvar"
       style={{

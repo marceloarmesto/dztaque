@@ -13,10 +13,12 @@ export default function CollectionTabs({
   const tabs = ['TODOS', ...collections]
 
   return (
-    <div style={{
-      display: 'flex', alignItems: 'center', padding: '0 20px',
-      borderBottom: '1px solid var(--border)', overflowX: 'auto',
-    }}>
+    <div
+      data-tour="collection-tabs"
+      style={{
+        display: 'flex', alignItems: 'center', padding: '0 20px',
+        borderBottom: '1px solid var(--border)', overflowX: 'auto',
+      }}>
       {tabs.map((tab) => {
         const isActive = active === tab || (active === '' && tab === 'TODOS')
         return (

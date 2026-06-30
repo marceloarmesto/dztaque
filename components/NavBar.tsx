@@ -62,6 +62,7 @@ export default async function NavBar() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <CreatePinButton />
         <a
+          data-tour="nav-notifications"
           href="/notifications"
           aria-label="Notificações"
           style={{ position: 'relative', textDecoration: 'none', display: 'flex', alignItems: 'center', padding: '6px 8px' }}
@@ -84,7 +85,7 @@ export default async function NavBar() {
             SAIR
           </button>
         </form>
-        <a href="/profile" title={name} style={{ cursor: 'pointer', textDecoration: 'none' }}>
+        <a data-tour="nav-avatar" href="/profile" title={name} style={{ cursor: 'pointer', textDecoration: 'none' }}>
           <span className="avatar" style={{ width: '28px', height: '28px', fontSize: '11px', overflow: 'hidden' }}>
             {profile?.avatar_url
               ? <img src={profile.avatar_url} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />

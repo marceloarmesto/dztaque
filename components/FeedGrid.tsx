@@ -69,7 +69,7 @@ export default function FeedGrid({
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+      <div data-tour="feed-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
         {cols.map((col, idx) => (
           <div key={idx}>
             {col.map((pin) => <PinCard key={pin.id} pin={pin} />)}

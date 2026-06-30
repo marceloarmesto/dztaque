@@ -42,6 +42,7 @@ export default function LikeButton({
         <span style={{ fontSize: '8px', color: 'var(--text-muted)' }}>{count}</span>
       )}
       <button
+        data-tour="like-btn"
         onClick={handleClick}
         aria-label="Curtir"
         style={{

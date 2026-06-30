@@ -8,6 +8,7 @@ export default function CreatePinButton() {
   return (
     <>
       <button
+        data-tour="create-pin"
         className="btn-ghost"
         onClick={() => setIsOpen(true)}
         style={{ fontSize: '9px' }}
