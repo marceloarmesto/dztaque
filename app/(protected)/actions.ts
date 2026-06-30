@@ -170,3 +170,58 @@ export async function markNotificationsRead(): Promise<void> {
     .eq('to_user_id', user.id)
     .eq('read', false)
 }
+
+type EditPinData = {
+  pinId: string
+  title: string
+  collection: string
+  tags: string[]
+  sourceUrl?: string
+  notes?: string
+}
+
+type EditPinResult = { success: true } | { success: false; error: string }
+
+export async function editPin(data: EditPinData): Promise<EditPinResult> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  if (!data.title.trim()) return { success: false, error: 'Título obrigatório' }
+  if (!data.collection.trim()) return { success: false, error: 'Coleção obrigatória' }
+
+  const { error } = await supabase
+    .from('pins')
+    .update({
+      title: data.title.trim().toUpperCase(),
+      collection: data.collection.trim(),
+      tags: data.tags,
+      source_url: data.sourceUrl?.trim() || null,
+      notes: data.notes?.trim() || null,
+    })
+    .eq('id', data.pinId)
+    .eq('author_id', user.id)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/feed')
+  revalidatePath(`/pin/${data.pinId}`)
+  return { success: true }
+}
+
+export async function deletePin(pinId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { success: false, error: 'Não autenticado' }
+
+  const { error } = await supabase
+    .from('pins')
+    .delete()
+    .eq('id', pinId)
+    .eq('author_id', user.id)
+
+  if (error) return { success: false, error: error.message }
+
+  revalidatePath('/feed')
+  return { success: true }
+}
