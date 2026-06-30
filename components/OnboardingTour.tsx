@@ -7,7 +7,7 @@ type TourStep = {
   selector: string
   title: string
   body: string
-  placement: 'above' | 'below'
+  placement: 'above' | 'below' | 'left'
 }
 
 const STEPS: TourStep[] = [
@@ -22,6 +22,12 @@ const STEPS: TourStep[] = [
     title: 'CRIAR UM PIN',
     body: 'Clique aqui para adicionar uma referência: faça upload de uma imagem ou cole uma URL.',
     placement: 'below',
+  },
+  {
+    selector: '[data-tour="create-pin-panel"]',
+    title: 'PREENCHENDO UM PIN',
+    body: 'Envie uma imagem ou use uma URL como origem. Preencha o título, a coleção (para organizar), as tags e uma nota opcional sobre a referência.',
+    placement: 'left',
   },
   {
     selector: '[data-tour="feed-grid"]',
@@ -62,6 +68,7 @@ const STEPS: TourStep[] = [
 ]
 
 const STORAGE_KEY = 'dztaque_tour_done'
+const DRAWER_STEP = 2
 const PADDING = 8     // px de respiro ao redor do elemento destacado
 const TOOLTIP_WIDTH = 320
 const TOOLTIP_GAP = 12
@@ -81,10 +88,30 @@ export default function OnboardingTour() {
     }
   }, [pathname])
 
-  // Avança para o passo `idx`, pulando elementos ausentes no DOM
-  const goToStep = useCallback((idx: number) => {
-    let i = idx
+  // Avança entre passos, abrindo/fechando o drawer conforme necessário
+  const goToStep = useCallback((fromIdx: number, toIdx: number) => {
+    // Fechar drawer se estamos saindo do step do drawer
+    if (fromIdx === DRAWER_STEP) {
+      const closeBtn = document.querySelector<HTMLElement>('[data-tour="create-pin-close"]')
+      if (closeBtn) closeBtn.click()
+    }
+
+    let i = toIdx
     while (i < STEPS.length) {
+      if (i === DRAWER_STEP) {
+        // Entrar no step do drawer: abrir o drawer e aguardar animação
+        setStepIdx(i)
+        setRect(null)
+        const createBtn = document.querySelector<HTMLElement>('[data-tour="create-pin"]')
+        if (createBtn) {
+          createBtn.click()
+          setTimeout(() => {
+            const panel = document.querySelector(STEPS[DRAWER_STEP].selector)
+            if (panel) setRect(panel.getBoundingClientRect())
+          }, 350)
+        }
+        return
+      }
       const el = document.querySelector(STEPS[i].selector)
       if (el) {
         setRect(el.getBoundingClientRect())
@@ -93,14 +120,13 @@ export default function OnboardingTour() {
       }
       i++
     }
-    // Nenhum elemento encontrado a partir de `idx` — encerrar tour
     localStorage.setItem(STORAGE_KEY, '1')
     setActive(false)
   }, [])
 
   // Vai ao passo 0 quando o tour é ativado
   useEffect(() => {
-    if (active) goToStep(0)
+    if (active) goToStep(-1, 0)
   }, [active, goToStep])
 
   // Recalcula o rect quando a janela é redimensionada
@@ -128,12 +154,12 @@ export default function OnboardingTour() {
 
   function next() {
     if (stepIdx === STEPS.length - 1) { dismiss(); return }
-    goToStep(stepIdx + 1)
+    goToStep(stepIdx, stepIdx + 1)
   }
 
   function prev() {
     if (stepIdx === 0) return
-    goToStep(stepIdx - 1)
+    goToStep(stepIdx, stepIdx - 1)
   }
 
   if (!active || !rect) return null
@@ -145,13 +171,15 @@ export default function OnboardingTour() {
   const spotWidth  = rect.width  + PADDING * 2
   const spotHeight = rect.height + PADDING * 2
 
-  const tooltipLeft = Math.max(
-    16,
-    Math.min(spotLeft, window.innerWidth - TOOLTIP_WIDTH - 16)
-  )
+  const tooltipLeft = step.placement === 'left'
+    ? Math.max(16, spotLeft - TOOLTIP_WIDTH - TOOLTIP_GAP)
+    : Math.max(16, Math.min(spotLeft, window.innerWidth - TOOLTIP_WIDTH - 16))
+
   const tooltipTop = step.placement === 'below'
     ? spotTop + spotHeight + TOOLTIP_GAP
-    : spotTop - tooltipHeight - TOOLTIP_GAP
+    : step.placement === 'above'
+    ? spotTop - tooltipHeight - TOOLTIP_GAP
+    : Math.max(16, spotTop + spotHeight / 2 - tooltipHeight / 2)
 
   return (
     <>

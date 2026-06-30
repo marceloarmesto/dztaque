@@ -188,6 +188,7 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
       {/* Painel */}
       <div
         ref={panelRef}
+        data-tour="create-pin-panel"
         style={{
           position: 'fixed', top: 0, right: 0, width: '400px', height: '100vh',
           background: 'var(--surface)', borderLeft: '1px solid var(--border)',
@@ -205,7 +206,7 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
               marginBottom: '20px', paddingBottom: '14px', borderBottom: '1px solid var(--border)',
             }}>
               <span className="caption">NOVO PIN</span>
-              <button type="button" onClick={onClose} style={{
+              <button type="button" data-tour="create-pin-close" onClick={onClose} style={{
                 background: 'none', border: 'none', cursor: 'pointer',
                 color: 'var(--text-muted)', fontSize: '22px', lineHeight: 1, padding: 0,
               }} aria-label="Fechar">×</button>
