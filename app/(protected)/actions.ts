@@ -190,7 +190,7 @@ export async function editPin(data: EditPinData): Promise<EditPinResult> {
   if (!data.title.trim()) return { success: false, error: 'Título obrigatório' }
   if (!data.collection.trim()) return { success: false, error: 'Coleção obrigatória' }
 
-  const { error } = await supabase
+  const { data: updatedPin, error } = await supabase
     .from('pins')
     .update({
       title: data.title.trim().toUpperCase(),
@@ -201,8 +201,11 @@ export async function editPin(data: EditPinData): Promise<EditPinResult> {
     })
     .eq('id', data.pinId)
     .eq('author_id', user.id)
+    .select('id')
+    .single()
 
   if (error) return { success: false, error: error.message }
+  if (!updatedPin) return { success: false, error: 'Pin não encontrado' }
 
   revalidatePath('/feed')
   revalidatePath(`/pin/${data.pinId}`)
@@ -214,14 +217,18 @@ export async function deletePin(pinId: string): Promise<{ success: boolean; erro
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { success: false, error: 'Não autenticado' }
 
-  const { error } = await supabase
+  const { data: deletedPin, error } = await supabase
     .from('pins')
     .delete()
     .eq('id', pinId)
     .eq('author_id', user.id)
+    .select('id')
+    .single()
 
   if (error) return { success: false, error: error.message }
+  if (!deletedPin) return { success: false, error: 'Pin não encontrado' }
 
   revalidatePath('/feed')
+  revalidatePath(`/pin/${pinId}`)
   return { success: true }
 }
