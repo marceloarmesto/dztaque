@@ -1,13 +1,14 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { createPin } from '@/app/(protected)/actions'
 
 type Profile = { id: string; name: string; handle: string }
 
-export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
+export default function CreatePinDrawer({ onClose, initialFile }: { onClose: () => void; initialFile?: File }) {
   const router = useRouter()
 
   // Imagem
@@ -42,6 +43,9 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
   // Submit
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [imageError, setImageError] = useState('')
+  const [titleError, setTitleError] = useState('')
+  const [collectionError, setCollectionError] = useState('')
 
   // Slide-in ao montar
   const panelRef = useRef<HTMLDivElement>(null)
@@ -50,6 +54,38 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
       if (panelRef.current) panelRef.current.style.transform = 'translateX(0)'
     })
   }, [])
+
+  // Upload automático quando initialFile é fornecido via drag-and-drop
+  useEffect(() => {
+    if (initialFile) {
+      void (async () => {
+        setImageMode('upload')
+        setUploading(true)
+        setImageError('')
+        try {
+          const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+          const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
+          const form = new FormData()
+          form.append('file', initialFile)
+          form.append('upload_preset', preset!)
+          form.append('folder', 'dztaque/pins')
+          const res = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`, {
+            method: 'POST', body: form,
+          })
+          const json = await res.json()
+          if (json.error) throw new Error(json.error.message)
+          setImageUrl(json.secure_url)
+          setImagePreview(json.secure_url)
+          setAspect(json.height / json.width)
+        } catch (err) {
+          setImageError('Erro no upload: ' + (err instanceof Error ? err.message : 'tente novamente'))
+          setImageMode(null)
+        } finally {
+          setUploading(false)
+        }
+      })()
+    }
+  }, [initialFile])
 
   // Carregar coleções e tags da DZ ao abrir
   useEffect(() => {
@@ -70,6 +106,7 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
     setImageMode('upload')
     setUploading(true)
     setSubmitError('')
+    setImageError('')
     try {
       const cloud = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
       const preset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET
@@ -142,9 +179,11 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
   // ── Submit ─────────────────────────────────────────────────
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!title.trim()) { setSubmitError('Título obrigatório'); return }
-    if (!collection.trim()) { setSubmitError('Coleção obrigatória'); return }
-    if (!imageUrl) { setSubmitError('Imagem obrigatória'); return }
+    let hasError = false
+    if (!imageUrl) { setImageError('Imagem obrigatória'); hasError = true }
+    if (!title.trim()) { setTitleError('Título obrigatório'); hasError = true }
+    if (!collection.trim()) { setCollectionError('Coleção obrigatória'); hasError = true }
+    if (hasError) return
 
     setSubmitting(true)
     setSubmitError('')
@@ -175,7 +214,7 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
     ? collectionSuggestions.filter((c) => c.toLowerCase().includes(collection.toLowerCase()))
     : collectionSuggestions
 
-  return (
+  return createPortal(
     <>
       {/* Overlay */}
       <div
@@ -228,7 +267,7 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
                   onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border-strong)')}
                 >
                   <p className="caption" style={{ color: 'var(--text-muted)' }}>
-                    {uploading ? 'ENVIANDO…' : 'CLIQUE PARA ENVIAR'}
+                    {uploading ? 'ENVIANDO…' : 'CLIQUE OU ARRASTE PARA ENVIAR'}
                   </p>
                   <p className="body-sm" style={{ color: 'var(--text-faint)', marginTop: '4px' }}>
                     JPG · PNG · GIF · WebP
@@ -258,7 +297,7 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
                   />
                   <button
                     type="button"
-                    onClick={() => { setImageMode(null); setImageUrl(''); setImagePreview(''); setAspect(1.0) }}
+                    onClick={() => { setImageMode(null); setImageUrl(''); setImagePreview(''); setAspect(1.0); setImageError('') }}
                     style={{
                       position: 'absolute', top: '6px', right: '6px', background: 'rgba(0,0,0,0.6)',
                       border: 'none', color: 'var(--text)', cursor: 'pointer',
@@ -266,6 +305,9 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
                     }}
                   >×</button>
                 </div>
+              )}
+              {imageError && (
+                <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{imageError}</p>
               )}
             </div>
 
@@ -300,10 +342,13 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
               <input
                 type="text"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => { setTitle(e.target.value); setTitleError('') }}
                 placeholder="NOME DA REFERÊNCIA"
                 style={{ textTransform: 'uppercase' }}
               />
+              {titleError && (
+                <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{titleError}</p>
+              )}
             </div>
 
             {/* Coleção */}
@@ -313,7 +358,7 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
                 <input
                   type="text"
                   value={collection}
-                  onChange={(e) => { setCollection(e.target.value); setShowCollectionDD(true) }}
+                  onChange={(e) => { setCollection(e.target.value); setShowCollectionDD(true); setCollectionError('') }}
                   onFocus={() => setShowCollectionDD(true)}
                   onBlur={() => setTimeout(() => setShowCollectionDD(false), 150)}
                   placeholder="nome da coleção"
@@ -336,6 +381,9 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
                   </div>
                 )}
               </div>
+              {collectionError && (
+                <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{collectionError}</p>
+              )}
             </div>
 
             {/* Tags */}
@@ -471,6 +519,7 @@ export default function CreatePinDrawer({ onClose }: { onClose: () => void }) {
           </div>
         </form>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
