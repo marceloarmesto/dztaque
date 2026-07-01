@@ -307,7 +307,7 @@ export default function CreatePinDrawer({ onClose, initialFile }: { onClose: () 
                 </div>
               )}
               {imageError && (
-                <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{imageError}</p>
+                <p style={{ fontSize: '10px', color: '#e05c5c', marginTop: '4px' }}>{imageError}</p>
               )}
             </div>
 
@@ -347,7 +347,7 @@ export default function CreatePinDrawer({ onClose, initialFile }: { onClose: () 
                 style={{ textTransform: 'uppercase' }}
               />
               {titleError && (
-                <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{titleError}</p>
+                <p style={{ fontSize: '10px', color: '#e05c5c', marginTop: '4px' }}>{titleError}</p>
               )}
             </div>
 
@@ -382,7 +382,7 @@ export default function CreatePinDrawer({ onClose, initialFile }: { onClose: () 
                 )}
               </div>
               {collectionError && (
-                <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{collectionError}</p>
+                <p style={{ fontSize: '10px', color: '#e05c5c', marginTop: '4px' }}>{collectionError}</p>
               )}
             </div>
 
