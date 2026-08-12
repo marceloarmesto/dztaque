@@ -5,13 +5,13 @@ import LoginButton from './LoginButton'
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; detail?: string }>
+  searchParams: Promise<{ error?: string; detail?: string; cookies?: string }>
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (user) redirect('/feed')
 
-  const { error, detail } = await searchParams
+  const { error, detail, cookies: cookieNames } = await searchParams
 
   const errorMessages: Record<string, string> = {
     domain: 'Acesso restrito a contas @dzestudio.com.br',
@@ -63,6 +63,16 @@ export default async function LoginPage({
             border: '1px dashed var(--border)', padding: '8px 12px', wordBreak: 'break-word',
           }}>
             Detalhe: {decodeURIComponent(detail)}
+          </p>
+        )}
+
+        {/* DIAGNÓSTICO TEMPORÁRIO — remover após identificar a causa da falha de login */}
+        {cookieNames && (
+          <p style={{
+            fontSize: '10px', color: 'var(--text-muted)', marginBottom: '16px',
+            border: '1px dashed var(--border)', padding: '8px 12px', wordBreak: 'break-word',
+          }}>
+            Cookies recebidos: {decodeURIComponent(cookieNames)}
           </p>
         )}
 
